@@ -1,0 +1,55 @@
+name: Render lecture images
+
+on:
+  push:
+    paths:
+      - "Blank/**/*.pptx"
+      - "Filled/**/*.pdf"
+      - "scripts/render_lecture_images.py"
+      - ".github/workflows/lecture-images.yml"
+
+jobs:
+  render:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libreoffice poppler-utils
+
+      - name: Render lecture images
+        run: python3 scripts/render_lecture_images.py
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare Pages artifact
+        run: |
+          rm -rf site
+          mkdir -p site/Lecture_Images
+          if [ -d Lecture_Images ]; then
+            cp -R Lecture_Images/. site/Lecture_Images/
+          fi
+          touch site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
