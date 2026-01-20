@@ -8,16 +8,9 @@ https://github.com/openai/gpt-2/blob/master/src/encoder.py
 class Simple_Tokenizer():
     def __init__(self):
         self.merges = {} # (int, int) -> int
-        self.vocab = self._build_vocab() # int -> bytes
+        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes
+        self.vocab = vocab | {256: b'<|sos|>', 257: b'<|eos|>'}
 
-    def _build_vocab(self):
-        # vocab is simply and deterministically derived from merges
-        vocab = {idx: bytes([idx]) for idx in range(256)}
-
-        for (p0, p1), idx in self.merges.items():
-            vocab[idx] = vocab[p0] + vocab[p1]
-
-        return vocab
 
     def _get_stats(self, ids, counts=None):
         """
@@ -53,15 +46,11 @@ class Simple_Tokenizer():
         return newids
 
     def train(self, text, vocab_size, verbose=False):
-        num_merges = vocab_size - 256
+        num_merges = vocab_size - 258
 
         # input text preprocessing
         text_bytes = text.encode("utf-8") # raw bytes
         ids = list(text_bytes) # list of integers in range 0..255
-
-        # iteratively merge the most common pairs to create new tokens
-        merges = {} # (int, int) -> int
-        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes
 
         for i in range(num_merges):
             # count up the number of times every consecutive pair appears
@@ -77,12 +66,8 @@ class Simple_Tokenizer():
             ids = self._merge(ids, pair, idx)
 
             # save the merge
-            merges[pair] = idx
-            vocab[idx] = vocab[pair[0]] + vocab[pair[1]]
-
-        # save class variables
-        self.merges = merges # used in encode()
-        self.vocab = vocab   # used in decode()
+            self.merges[pair] = idx
+            self.vocab[idx] = self.vocab[pair[0]] + self.vocab[pair[1]]
 
     def decode(self, ids):
         # given ids (list of integers), return Python string
