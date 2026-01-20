@@ -71,7 +71,11 @@ def generate_sequence(graph, max_token_length):
     while output[-1] != '<|eos|>':
         token_neighbors = graph[output[-1]]
 
-        output += random.choices(list(token_neighbors.keys()), weights=list(token_neighbors.values()), k=1)
+        try:
+            output += random.choices(list(token_neighbors.keys()), weights=list(token_neighbors.values()), k=1)
+        except:
+            output += ['<|eos|>']
+            break
 
         if len(output) > max_token_length:
             break

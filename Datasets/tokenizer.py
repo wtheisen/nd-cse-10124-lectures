@@ -81,7 +81,6 @@ class Simple_Tokenizer():
             vocab[idx] = vocab[pair[0]] + vocab[pair[1]]
 
         # save class variables
-        print(merges)
         self.merges = merges # used in encode()
         self.vocab = vocab   # used in decode()
 
