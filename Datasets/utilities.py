@@ -2,7 +2,7 @@ def get_file_as_string(source_file): # Define a function named 'get_lines_str' t
     text = '' # Create a variable named 'lines' points to a list data structure
     with open(source_file) as f:
         for line in f: # For each item in the variable 'f', set the variable named 'line' equal to it, one by one
-            text += '<SOS> ' + line.strip() + ' <EOS>' # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
+            text += line.strip() # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
 
     return text # This function returns the variable named 'lines'
 
@@ -17,22 +17,18 @@ def get_file_as_list(source_file): # Define a function named 'get_lines_str' tha
 from collections import defaultdict, Counter
 
 def build_graph_word(source_file, graph=None):
-    lines = list(get_file_as_list(source_file))
+    lines = get_file_as_list(source_file)
 
     if not graph:
         graph = defaultdict(Counter) # graph is a dictionary of dictionaries like: {'<SOS>': {'I': 37, 'The': 64}}
 
     for line in lines:
         if line:
-            graph['<SOS>'][line[0]] += 1
-
             for idx in range(0, len(line) - 1):
                 curr_token = line[idx]
                 next_token = line[idx + 1]
 
                 graph[curr_token][next_token] += 1
-
-                graph[line[-1]]['<EOS>'] += 1
 
     return graph
 
