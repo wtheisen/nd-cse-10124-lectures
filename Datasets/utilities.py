@@ -24,8 +24,11 @@ def get_file_as_list_strs(source_file): # Define a function named 'get_lines_str
 
 from collections import defaultdict, Counter
 
-def build_graph_word(source_file, graph=None):
-    lines = get_file_as_list(source_file)
+def build_graph_word(source_file, file=True, graph=None):
+    lines = source_file
+
+    if file:
+        lines = get_file_as_list(source_file)
 
     if not graph:
         graph = defaultdict(Counter) # graph is a dictionary of dictionaries like: {'<SOS>': {'I': 37, 'The': 64}}
