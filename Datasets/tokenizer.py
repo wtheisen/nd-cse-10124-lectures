@@ -8,6 +8,7 @@ https://github.com/openai/gpt-2/blob/master/src/encoder.py
 class Simple_Tokenizer():
     def __init__(self):
         self.merges = {} # (int, int) -> int
+
         vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes
         self.vocab = vocab | {256: b'<|sos|>', 257: b'<|eos|>'}
 
