@@ -85,3 +85,18 @@ def generate_sequence(graph, prompt=None, max_token_length=50):
             break
 
     return output
+
+def create_token_graph(file_name, tokenizer, vocab_size=512):
+    training_str = get_file_as_string(file_name)
+    testing_lines = get_file_as_list_strs(file_name)
+
+    tokenizer.train(training_str, vocab_size)
+
+    tokenized_lines = []
+    for line in testing_lines:
+        tokenized_str = tokenizer.encode(line.lower())
+        tokenized_lines.append([tokenizer.decode([token]) for token in tokenized_str])
+
+    token_graph = build_graph_word(tokenized_lines, file=False)
+
+    return token_graph
