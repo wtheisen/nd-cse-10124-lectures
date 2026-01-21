@@ -6,19 +6,25 @@ def get_file_as_string(source_file): # Define a function named 'get_lines_str' t
 
     return text # This function returns the variable named 'lines'
 
-def get_file_as_list(source_file): # Define a function named 'get_lines_str' that takes an argument called 'source_file'
+def get_file_as_list(source_file, special_tokens=False): # Define a function named 'get_lines_str' that takes an argument called 'source_file'
     lines = [] # Create a variable named 'lines' points to a list data structure
     with open(source_file) as f:
         for line in f: # For each item in the variable 'f', set the variable named 'line' equal to it, one by one
-            lines.append(line.strip().split()) # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
+            if special_tokens:
+                lines.append(['<|sos|>'] + line.strip().split() + ['<|eos|>']) # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
+            else:
+                lines.append(line.strip().split()) # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
 
     return lines # This function returns the variable named 'lines'
 
-def get_file_as_list_strs(source_file): # Define a function named 'get_lines_str' that takes an argument called 'source_file'
+def get_file_as_list_strs(source_file, special_tokens=False): # Define a function named 'get_lines_str' that takes an argument called 'source_file'
     lines = [] # Create a variable named 'lines' points to a list data structure
     with open(source_file) as f:
         for line in f: # For each item in the variable 'f', set the variable named 'line' equal to it, one by one
-            lines.append(line.strip()) # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
+            if special_tokens:
+                lines.append('<|sos|>' + line.strip() + '<|eos|>') # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
+            else:
+                lines.append(line.strip()) # Add the content of the variable 'line' to the end of the list named 'lines' (after removing whitespace and newlines on either end)
 
     return lines # This function returns the variable named 'lines'
 
@@ -35,15 +41,11 @@ def build_graph_word(source_file, file=True, graph=None):
 
     for line in lines:
         if line:
-            graph['<|sos|>'][line[0]] += 1
-
             for idx in range(0, len(line) - 1):
                 curr_token = line[idx]
                 next_token = line[idx + 1]
 
                 graph[curr_token][next_token] += 1
-
-            graph[line[-1]]['<|eos|>'] += 1
 
     return graph
 
@@ -86,9 +88,9 @@ def generate_sequence(graph, prompt=None, max_token_length=50):
 
     return output
 
-def create_token_graph(file_name, tokenizer, vocab_size=512):
+def create_token_graph(file_name, tokenizer, vocab_size=512, special_tokens=False):
     training_str = get_file_as_string(file_name)
-    testing_lines = get_file_as_list_strs(file_name)
+    testing_lines = get_file_as_list_strs(file_name, special_tokens)
 
     tokenizer.train(training_str, vocab_size)
 
