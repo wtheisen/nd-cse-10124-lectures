@@ -66,9 +66,9 @@ def build_graph_char(source_file, graph=None):
 
     return graph
 
-def build_graph_token(file_name, tokenizer, vocab_size=512, special_tokens=False):
+def build_graph_token(file_name, tokenizer, vocab_size=512):
     training_str = get_file_as_string(file_name)
-    testing_lines = get_file_as_list_strs(file_name, special_tokens)
+    testing_lines = get_file_as_list_strs(file_name, special_tokens=True)
 
     tokenizer.train(training_str, vocab_size)
 
