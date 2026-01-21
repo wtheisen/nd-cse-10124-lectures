@@ -3,15 +3,38 @@ Minimal (byte-level) Byte Pair Encoding tokenizer.
 
 Algorithmically follows along the GPT tokenizer:
 https://github.com/openai/gpt-2/blob/master/src/encoder.py
+
+Unlike BasicTokenizer:
+- RegexTokenizer handles an optional regex splitting pattern.
+- RegexTokenizer handles optional special tokens.
 """
 
-class Simple_Tokenizer():
+import regex as re
+
+# the main GPT text split patterns, see
+# https://github.com/openai/tiktoken/blob/main/tiktoken_ext/openai_public.py
+GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
+
+
+class RegexTokenizer():
     def __init__(self):
         self.merges = {} # (int, int) -> int
+        self.special_tokens = {'<|sos|>': 256, '<|eos|>': 257} # str -> int, e.g. {'<|endoftext|>': 100257}
+        self.vocab = {idx: bytes([idx]) for idx in range(256)} | {idx: special.encode("utf-8") for special, idx in self.special_tokens.items()}
+        #self.vocab = self._init_vocab() # int -> bytes
 
-        vocab = {idx: bytes([idx]) for idx in range(256)} # int -> bytes
-        self.vocab = vocab | {256: b'<|sos|>', 257: b'<|eos|>'}
+        self.pattern = GPT4_SPLIT_PATTERN
+        self.compiled_pattern = re.compile(self.pattern)
 
+    def _build_vocab(self):
+        # vocab is simply and deterministically derived from merges
+        vocab = {idx: bytes([idx]) for idx in range(256)} + {idx: special.encode("utf-8") for special, idx in special_tokens.items()}
+
+        for special, idx in self.special_tokens.items():
+            vocab[idx] = special.encode("utf-8")
+
+        return vocab
 
     def _get_stats(self, ids, counts=None):
         """
@@ -20,10 +43,8 @@ class Simple_Tokenizer():
         Optionally allows to update an existing dictionary of counts
         """
         counts = {} if counts is None else counts
-
         for pair in zip(ids, ids[1:]): # iterate consecutive elements
             counts[pair] = counts.get(pair, 0) + 1
-
         return counts
 
     def _merge(self, ids, pair, idx):
@@ -34,7 +55,6 @@ class Simple_Tokenizer():
         """
         newids = []
         i = 0
-
         while i < len(ids):
             # if not at the very last position AND the pair matches, replace it
             if ids[i] == pair[0] and i < len(ids) - 1 and ids[i+1] == pair[1]:
@@ -43,28 +63,37 @@ class Simple_Tokenizer():
             else:
                 newids.append(ids[i])
                 i += 1
-
         return newids
 
-    def train(self, text, vocab_size, verbose=False):
-        num_merges = vocab_size - 258
+    def chunk(self, text):
+        return re.findall(self.compiled_pattern, text)
+
+    def train(self, text, max_vocab_size, verbose=False):
+        pretrain_vocab_size = len(self.vocab)
+        num_merges = max_vocab_size - pretrain_vocab_size
+
+        # split the text up into text chunks
+        text_chunks = re.findall(self.compiled_pattern, text)
 
         # input text preprocessing
-        text_bytes = text.encode("utf-8") # raw bytes
-        ids = list(text_bytes) # list of integers in range 0..255
+        ids = [list(ch.encode("utf-8")) for ch in text_chunks]
 
+        # iteratively merge the most common pairs to create new tokens
         for i in range(num_merges):
-            # count up the number of times every consecutive pair appears
-            stats = self._get_stats(ids)
+            # count the number of times every consecutive pair appears
+            stats = {}
+            for chunk_ids in ids:
+                # passing in stats will update it in place, adding up counts
+                self._get_stats(chunk_ids, stats)
 
             # find the pair with the highest count
             pair = max(stats, key=stats.get)
 
             # mint a new token: assign it the next available id
-            idx = 258 + i
+            idx = pretrain_vocab_size + i
 
             # replace all occurrences of pair in ids with idx
-            ids = self._merge(ids, pair, idx)
+            ids = [self._merge(chunk_ids, pair, idx) for chunk_ids in ids]
 
             # save the merge
             self.merges[pair] = idx
@@ -72,28 +101,63 @@ class Simple_Tokenizer():
 
     def decode(self, ids):
         # given ids (list of integers), return Python string
-        text_bytes = b"".join(self.vocab[idx] for idx in ids)
+        part_bytes = []
+        for idx in ids:
+            if idx in self.vocab:
+                part_bytes.append(self.vocab[idx])
+            else:
+                part_bytes.append('<|unk|>')
+
+        text_bytes = b"".join(part_bytes)
         text = text_bytes.decode("utf-8", errors="replace")
+
         return text
 
-    def encode(self, text):
-        # given a string text, return the token ids
-        text_bytes = text.encode("utf-8") # raw bytes
-        ids = list(text_bytes) # list of integers in range 0..255
+    def _encode_chunk(self, text_bytes):
+        # return the token ids
+        # let's begin. first, convert all bytes to integers in range 0..255
+        ids = list(text_bytes)
 
         while len(ids) >= 2:
             # find the pair with the lowest merge index
             stats = self._get_stats(ids)
             pair = min(stats, key=lambda p: self.merges.get(p, float("inf")))
-
+            # subtle: if there are no more merges available, the key will
+            # result in an inf for every single pair, and the min will be
             # just the first pair in the list, arbitrarily
             # we can detect this terminating case by a membership check
             if pair not in self.merges:
                 break # nothing else can be merged anymore
-
             # otherwise let's merge the best pair (lowest merge index)
             idx = self.merges[pair]
             ids = self._merge(ids, pair, idx)
+
+        return ids
+
+    def encode(self, text):
+        # otherwise, we have to be careful with potential special tokens in text
+        # we handle special tokens by splitting the text
+        # based on the occurrence of any exact match with any of the special tokens
+        # we can use re.split for this. note that surrounding the pattern with ()
+        # makes it into a capturing group, so the special tokens will be included
+        special_pattern = "(" + "|".join(re.escape(k) for k in self.special_tokens) + ")"
+        special_chunks = re.split(special_pattern, text)
+
+        # now all the special characters are separated from the rest of the text
+        # all chunks of text are encoded separately, then results are joined
+        ids = []
+        for part in special_chunks[1:-1]:
+            if part in self.special_token:
+                # this is a special token, encode it separately as a special case
+                ids.append(self.special_tokens[part])
+            else:
+                # this is an ordinary sequence, encode it normally
+                text_chunks = re.findall(self.compiled_pattern, text)
+
+                for chunk in text_chunks:
+                    chunk_bytes = chunk.encode("utf-8") # raw bytes
+                    chunk_ids = self._encode_chunk(chunk_bytes)
+                    ids.extend(chunk_ids)
 
         return ids
 
@@ -108,8 +172,5 @@ class Simple_Tokenizer():
         for token_id in ids:
             token_str = self.decode([token_id])
             tokens.append(f"{GREEN}{token_str}{GRAY}({token_id}){RESET}")
-
-            if token_str in ['<|SOS|>', '<|EOS|>']:
-                tokens.append('\n\n\t')
 
         return ' | '.join(tokens)
