@@ -138,7 +138,7 @@ class RegexTokenizer():
         # all chunks of text are encoded separately, then results are joined
         ids = []
         for part in special_chunks[1:-1]:
-            if part in self.special_token:
+            if part in self.special_tokens:
                 # this is a special token, encode it separately as a special case
                 ids.append(self.special_tokens[part])
             else:
