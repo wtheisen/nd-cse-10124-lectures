@@ -30,21 +30,18 @@ def get_file_as_list_strs(source_file, special_tokens=False): # Define a functio
 
 from collections import defaultdict, Counter
 
-def build_graph_word(source_file, file=True, graph=None):
+def build_graph_word(source_file, file=True, graph=None, special_tokens=True):
     lines = source_file
 
     if file:
-        lines = get_file_as_list(source_file)
+        lines = get_file_as_list(source_file, special_tokens)
 
     if not graph:
         graph = defaultdict(Counter) # graph is a dictionary of dictionaries like: {'<SOS>': {'I': 37, 'The': 64}}
 
     for line in lines:
         if line:
-            for idx in range(0, len(line) - 1):
-                curr_token = line[idx]
-                next_token = line[idx + 1]
-
+            for curr_token, next_token in zip(line, line[1:]):
                 graph[curr_token][next_token] += 1
 
     return graph
