@@ -69,6 +69,19 @@ def build_graph_char(source_file, graph=None):
 
     return graph
 
+def build_graph_token(file_name, tokenizer, vocab_size=512, special_tokens=False):
+    training_str = get_file_as_string(file_name)
+    testing_lines = get_file_as_list_strs(file_name, special_tokens)
+
+    tokenizer.train(training_str, vocab_size)
+
+    tokenized_lines = []
+    for line in testing_lines:
+        tokenized_str = tokenizer.encode(line.lower())
+        tokenized_lines.append([tokenizer.decode([token]) for token in tokenized_str])
+
+    return build_graph_word(tokenized_lines, file=False)
+
 import random
 
 def generate_sequence(graph, prompt=None, max_token_length=50):
@@ -88,17 +101,3 @@ def generate_sequence(graph, prompt=None, max_token_length=50):
 
     return output
 
-def create_token_graph(file_name, tokenizer, vocab_size=512, special_tokens=False):
-    training_str = get_file_as_string(file_name)
-    testing_lines = get_file_as_list_strs(file_name, special_tokens)
-
-    tokenizer.train(training_str, vocab_size)
-
-    tokenized_lines = []
-    for line in testing_lines:
-        tokenized_str = tokenizer.encode(line.lower())
-        tokenized_lines.append([tokenizer.decode([token]) for token in tokenized_str])
-
-    token_graph = build_graph_word(tokenized_lines, file=False)
-
-    return token_graph
