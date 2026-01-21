@@ -22,21 +22,11 @@ class RegexTokenizer():
         self.merges = {} # (int, int) -> int
         self.special_tokens = {'<|sos|>': 256, '<|eos|>': 257} # str -> int, e.g. {'<|endoftext|>': 100257}
         self.vocab = {idx: bytes([idx]) for idx in range(256)} | {idx: special.encode("utf-8") for special, idx in self.special_tokens.items()}
-        #self.vocab = self._init_vocab() # int -> bytes
 
         self.pattern = GPT4_SPLIT_PATTERN
         self.compiled_pattern = re.compile(self.pattern)
 
-    def _build_vocab(self):
-        # vocab is simply and deterministically derived from merges
-        vocab = {idx: bytes([idx]) for idx in range(256)} + {idx: special.encode("utf-8") for special, idx in special_tokens.items()}
-
-        for special, idx in self.special_tokens.items():
-            vocab[idx] = special.encode("utf-8")
-
-        return vocab
-
-    def _get_stats(self, ids, counts=None):
+    def _count_pairs(self, ids, counts=None):
         """
         Given a list of integers, return a dictionary of counts of consecutive pairs
         Example: [1, 2, 3, 1, 2] -> {(1, 2): 2, (2, 3): 1, (3, 1): 1}
@@ -47,7 +37,7 @@ class RegexTokenizer():
             counts[pair] = counts.get(pair, 0) + 1
         return counts
 
-    def _merge(self, ids, pair, idx):
+    def _merge_pairs(self, ids, pair, idx):
         """
         In the list of integers (ids), replace all consecutive occurrences
         of pair with the new integer token idx
@@ -84,7 +74,7 @@ class RegexTokenizer():
             stats = {}
             for chunk_ids in ids:
                 # passing in stats will update it in place, adding up counts
-                self._get_stats(chunk_ids, stats)
+                self._count_pairs(chunk_ids, stats)
 
             # find the pair with the highest count
             pair = max(stats, key=stats.get)
@@ -93,7 +83,7 @@ class RegexTokenizer():
             idx = pretrain_vocab_size + i
 
             # replace all occurrences of pair in ids with idx
-            ids = [self._merge(chunk_ids, pair, idx) for chunk_ids in ids]
+            ids = [self._merge_pairs(chunk_ids, pair, idx) for chunk_ids in ids]
 
             # save the merge
             self.merges[pair] = idx
@@ -120,7 +110,7 @@ class RegexTokenizer():
 
         while len(ids) >= 2:
             # find the pair with the lowest merge index
-            stats = self._get_stats(ids)
+            stats = self._count_pairs(ids)
             pair = min(stats, key=lambda p: self.merges.get(p, float("inf")))
             # subtle: if there are no more merges available, the key will
             # result in an inf for every single pair, and the min will be
@@ -130,7 +120,7 @@ class RegexTokenizer():
                 break # nothing else can be merged anymore
             # otherwise let's merge the best pair (lowest merge index)
             idx = self.merges[pair]
-            ids = self._merge(ids, pair, idx)
+            ids = self._merge_pairs(ids, pair, idx)
 
         return ids
 
@@ -152,7 +142,7 @@ class RegexTokenizer():
                 ids.append(self.special_tokens[part])
             else:
                 # this is an ordinary sequence, encode it normally
-                text_chunks = re.findall(self.compiled_pattern, text)
+                text_chunks = self.chunk(part)
 
                 for chunk in text_chunks:
                     chunk_bytes = chunk.encode("utf-8") # raw bytes
