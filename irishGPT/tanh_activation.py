@@ -1,3 +1,6 @@
+import torch
+
+
 class Tanh:
     """
     The tanh activation function

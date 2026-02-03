@@ -1,3 +1,6 @@
+import math
+import torch
+
 # TODO: Implement the LinearLayer class (Consider copying from Homework04)
 
 class LinearLayer:

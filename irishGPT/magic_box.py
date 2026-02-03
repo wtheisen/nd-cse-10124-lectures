@@ -1,7 +1,7 @@
 import torch
 import math
 from collections import namedtuple
-from tanh_activation import Tanh
+from .tanh_activation import Tanh
 
 class MagicBox:
     """
