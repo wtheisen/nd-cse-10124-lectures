@@ -1,3 +1,4 @@
+from . import dataset
 from . import tokenizer
 from . import utilities
 from . import embedding

@@ -9,6 +9,7 @@ Unlike BasicTokenizer:
 - RegexTokenizer handles optional special tokens.
 """
 
+import json
 import regex as re
 from collections import Counter
 
@@ -247,6 +248,33 @@ class Regex_Tokenizer():
                     ids.extend(chunk_ids)
 
         return ids
+
+    def save(self, filepath):
+        """Save the tokenizer state to a JSON file."""
+        data = {
+            "pattern": self.pattern,
+            "special_tokens": self.special_tokens,
+            "merges": {f"{k[0]},{k[1]}": v for k, v in self.merges.items()},
+        }
+        with open(filepath, "w") as f:
+            json.dump(data, f, indent=2)
+
+    def load(self, filepath):
+        """Load the tokenizer state from a JSON file."""
+        with open(filepath, "r") as f:
+            data = json.load(f)
+
+        self.pattern = data["pattern"]
+        self.compiled_pattern = re.compile(self.pattern)
+        self.special_tokens = data["special_tokens"]
+        self.merges = {tuple(map(int, k.split(","))): v for k, v in data["merges"].items()}
+
+        # Rebuild vocab from base bytes + special tokens + merges
+        self.vocab = {idx: bytes([idx]) for idx in range(256)}
+        for special, idx in self.special_tokens.items():
+            self.vocab[idx] = special.encode("utf-8")
+        for (p0, p1), idx in self.merges.items():
+            self.vocab[idx] = self.vocab[p0] + self.vocab[p1]
 
     def visualize_tokenization(self, ids):
         """Small helper function useful in debugging: visualize the tokenization of render_conversation"""
