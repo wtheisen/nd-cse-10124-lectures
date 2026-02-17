@@ -99,14 +99,13 @@ def generate_sequence(graph, prompt=None, max_token_length=50):
     return output
 
 import torch
-import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import tokenizer
 
 class IrishChatDataset(Dataset):
-    def __init__(self, training_file):
-        self.tokenizer = tokenizer.Regex_Tokenizer()
+    def __init__(self, training_file, tokenizer):
+        self.tokenizer = tokenizer
         self.tokenizer.train(get_file_as_string(training_file), 512)
         self.device = torch.device('cuda' if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
