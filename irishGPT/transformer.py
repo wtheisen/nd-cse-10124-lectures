@@ -2,8 +2,8 @@ import math
 import torch
 import torch.nn.functional as F
 from collections import namedtuple
-from linear_layer import LinearLayer
-from relu import ReLU
+from .linear_layer import LinearLayer
+from .relu import ReLU
 
 class Transformer:
     Grad_Info = namedtuple('Grad_Info', [

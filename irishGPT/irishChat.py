@@ -1,9 +1,9 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-from embedding import EmbeddingLayer
-from linear_layer import LinearLayer
-from transformer import Transformer
+from .embedding import EmbeddingLayer
+from .linear_layer import LinearLayer
+from .transformer import Transformer
 
 class IrishChat:
     def __init__(self,  ctx_len: int = 1024, d_model: int = 128):

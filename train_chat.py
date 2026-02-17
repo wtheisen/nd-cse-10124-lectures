@@ -1,11 +1,11 @@
 import torch
-from irishChat import IrishChat
-import utilities as uts
+from irishGPT.irishChat import IrishChat
+import irishGPT.utilities as uts
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-import tokenizer
+import irishGPT.tokenizer as tokenizer
 
 class IrishChatDataset(Dataset):
     def __init__(self, training_file):
@@ -38,7 +38,7 @@ class IrishChatDataset(Dataset):
 
 if __name__ == "__main__":
     chat = IrishChat()
-    dataset = IrishChatDataset("../Datasets/zoomer.txt")
+    dataset = IrishChatDataset("Datasets/zoomer.txt")
     train_loader = DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=dataset.collate)
     chat.train(train_loader, 500, 0.01, verbose=True)
 
