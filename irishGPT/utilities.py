@@ -101,7 +101,6 @@ def generate_sequence(graph, prompt=None, max_token_length=50):
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
-import tokenizer
 
 class IrishChatDataset(Dataset):
     def __init__(self, training_file, tokenizer):
