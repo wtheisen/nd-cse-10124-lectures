@@ -117,7 +117,7 @@ class Regex_Tokenizer():
 
     def __init__(self):
         self.merges = {} # (int, int) -> int
-        self.special_tokens = {'<|sos|>': 256, '<|eos|>': 257} # str -> int, e.g. {'<|endoftext|>': 100257}
+        self.special_tokens = {'<|pad|>': 256, '<|sos|>': 257, '<|eos|>': 258} # str -> int, e.g. {'<|endoftext|>': 100257}
         self.vocab = {idx: bytes([idx]) for idx in range(256)} | {idx: special.encode("utf-8") for special, idx in self.special_tokens.items()}
 
         self.pattern = self.GPT4_SPLIT_PATTERN

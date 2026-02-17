@@ -98,3 +98,42 @@ def generate_sequence(graph, prompt=None, max_token_length=50):
 
     return output
 
+import torch
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import Dataset
+import tokenizer
+
+class IrishChatDataset(Dataset):
+    def __init__(self, training_file):
+        self.tokenizer = tokenizer.Regex_Tokenizer()
+        self.tokenizer.train(get_file_as_string(training_file), 512)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+
+        self.data = []
+        for x in get_file_as_list_strs(training_file, special_tokens=True):
+            tokens = torch.tensor(self.tokenizer.encode(x), dtype=torch.long)
+            if len(tokens) >= 2:
+                # X = tokens[:-1], Y = tokens[1:]  (next-token prediction)
+                self.data.append((tokens[:-1], tokens[1:]))
+        self.padding_idx = 256
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+    # ---------- Collate (pad, optional one-hot, move to device) ----------
+    def collate(self, batch):
+        X_list, Y_list = zip(*batch)
+        X = pad_sequence(X_list, batch_first=True, padding_value=self.padding_idx)      # (B,T)
+        Y_idx = pad_sequence(Y_list, batch_first=True, padding_value=self.padding_idx)  # (B,T)
+
+        V = len(self.tokenizer.vocab)
+        Y = F.one_hot(Y_idx.clamp_min(0), num_classes=V).float()                        # (B,T,V)
+
+        # mask True where this position is a real target token (not padding)
+        mask = (Y_idx != self.padding_idx)                                              # (B,T)
+
+        return X.to(self.device), Y.to(self.device), mask.to(self.device)
