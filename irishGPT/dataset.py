@@ -1,9 +1,9 @@
 
 import torch
 import torch.nn.functional as F
+import .utilities as uts
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
-from . import utilities as uts
 
 class IrishChatDataset(Dataset):
     def __init__(self, dataset_file, tokenizer):
