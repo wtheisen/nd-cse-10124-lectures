@@ -10,11 +10,13 @@ import irishGPT.tokenizer as tokenizer
 class IrishChatDataset(Dataset):
     def __init__(self, training_file):
         self.tokenizer = tokenizer.Regex_Tokenizer()
-        self.tokenizer.train(uts.get_file_as_string(training_file), 512)
+
+        self.tokenizer.load('Datasets/openweb10k_tokenizer.json')
+        # self.tokenizer.train(uts.get_file_as_string(training_file), 512)
         self.device = torch.device('cuda' if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
         self.data = []
-        for x in uts.get_file_as_list_strs(training_file, special_tokens=True):
+        for x in uts.get_file_as_list_strs(training_file, special_tokens=True)[:1000]:
             tokens = torch.tensor(self.tokenizer.encode(x), dtype=torch.long)
             if len(tokens) >= 2:
                 # X = tokens[:-1], Y = tokens[1:]  (next-token prediction)
@@ -37,8 +39,8 @@ class IrishChatDataset(Dataset):
         return X.to(self.device), Y.to(self.device)
 
 if __name__ == "__main__":
-    chat = IrishChat()
-    dataset = IrishChatDataset("Datasets/zoomer.txt")
+    chat = IrishChat(vocab_size=3200)
+    dataset = IrishChatDataset("Datasets/openweb10k.txt")
     train_loader = DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=dataset.collate)
     chat.train(train_loader, 500, 0.01, verbose=True)
 

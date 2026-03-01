@@ -1,19 +1,20 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
+from tqdm import tqdm
 from .embedding import EmbeddingLayer
 from .linear_layer import LinearLayer
 from .transformer import Transformer
 
 class IrishChat:
-    def __init__(self,  ctx_len: int = 1024, d_model: int = 128):
+    def __init__(self,  vocab_size: int = 512, ctx_len: int = 1024, d_model: int = 128):
         self.padding_idx = 256
         self.ctx_len = ctx_len
         self.device = torch.device('cuda' if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
         # TODO: Instantiate the components of the transformer
         self.layers = [
-            EmbeddingLayer(512, d_model, device=self.device),
+            EmbeddingLayer(vocab_size, d_model, device=self.device),
             Transformer(d_model, d_model, device=self.device),
             Transformer(d_model, d_model, device=self.device),
             Transformer(d_model, d_model, device=self.device),
@@ -24,7 +25,7 @@ class IrishChat:
             Transformer(d_model, d_model, device=self.device),
             Transformer(d_model, d_model, device=self.device),
             Transformer(d_model, d_model, device=self.device),
-            LinearLayer(d_model, 512, device=self.device),
+            LinearLayer(d_model, vocab_size, device=self.device),
         ]
 
     def forward(self, X, eval=False):
@@ -187,11 +188,11 @@ class IrishChat:
         loss_history = []
         accuracy_history = []
         
-        for i in range(epochs):
+        for i in tqdm(range(epochs), desc="Epochs"):    
             batch_losses = []
             batch_accuracies = []
 
-            for X_batch, Y_batch in train_loader:
+            for X_batch, Y_batch in tqdm(train_loader, desc="Batches"):
                 # Forward propagation
                 # TODO: Calculate the output of the network
                 Y_hat_batch = self.forward(X_batch)

@@ -1,7 +1,7 @@
 
 import torch
 import torch.nn.functional as F
-import .utilities as uts
+from . import utilities as uts
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 
