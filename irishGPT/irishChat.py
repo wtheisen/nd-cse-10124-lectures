@@ -5,28 +5,85 @@ from tqdm import tqdm
 from .embedding import EmbeddingLayer
 from .linear_layer import LinearLayer
 from .transformer import Transformer
+from .positional_embedding import PositionalEmbedding
+from .layer_norm import LayerNorm
 
 class IrishChat:
-    def __init__(self,  vocab_size: int = 512, ctx_len: int = 1024, d_model: int = 128):
+    def __init__(
+        self,
+        vocab_size: int = 512,
+        ctx_len: int = 1024,
+        d_model: int = 128,
+        n_layers: int = 1,
+        n_heads: int = 1,
+        use_gelu: bool = False,
+    ):
         self.padding_idx = 256
         self.ctx_len = ctx_len
         self.device = torch.device('cuda' if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
-        # TODO: Instantiate the components of the transformer
-        self.layers = [
-            EmbeddingLayer(vocab_size, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            Transformer(d_model, d_model, device=self.device),
-            LinearLayer(d_model, vocab_size, device=self.device),
+        self.token_embedding = EmbeddingLayer(vocab_size, d_model, device=self.device)
+        self.positional_embedding = PositionalEmbedding(ctx_len, d_model, device=self.device)
+        self.transformer_blocks = [
+            Transformer(
+                d_model,
+                n_heads=n_heads,
+                use_gelu=use_gelu,
+                device=self.device,
+            )
+            for _ in range(n_layers)
         ]
+        self.final_ln = LayerNorm(d_model, device=self.device)
+        self.lm_head = LinearLayer(d_model, vocab_size, device=self.device)
+
+    @classmethod
+    def gpt2_small(cls):
+        return cls(
+            vocab_size=50257,
+            ctx_len=1024,
+            d_model=768,
+            n_layers=12,
+            n_heads=12,
+            use_gelu=True,
+        )
+
+    def load_converted_gpt2_checkpoint(self, checkpoint_path):
+        """
+        Load a project-native GPT-2 checkpoint (torch .pt).
+
+        Expected top-level keys:
+          - wte: (V, C)
+          - wpe: (T, C)
+          - blocks: list[dict] with GPT-2 block keys
+          - ln_f.weight: (C,)
+          - ln_f.bias: (C,)
+          - optional lm_head.weight: (V, C)
+        """
+        ckpt = torch.load(checkpoint_path, map_location=self.device)
+        required = ["wte", "wpe", "blocks", "ln_f.weight", "ln_f.bias"]
+        missing = [k for k in required if k not in ckpt]
+        if missing:
+            raise ValueError(f"Checkpoint missing required keys: {missing}")
+
+        self.token_embedding.W = ckpt["wte"].T.to(self.device).contiguous()
+        self.positional_embedding.W = ckpt["wpe"].to(self.device).contiguous()
+        self.final_ln.gamma = ckpt["ln_f.weight"].to(self.device).contiguous()
+        self.final_ln.beta = ckpt["ln_f.bias"].to(self.device).contiguous()
+
+        if len(ckpt["blocks"]) != len(self.transformer_blocks):
+            raise ValueError(
+                f"Block count mismatch: checkpoint has {len(ckpt['blocks'])}, model has {len(self.transformer_blocks)}"
+            )
+
+        for block, block_state in zip(self.transformer_blocks, ckpt["blocks"]):
+            block.load_from_gpt2_block(block_state)
+
+        if "lm_head.weight" in ckpt:
+            self.lm_head.W = ckpt["lm_head.weight"].to(self.device).contiguous()
+        else:
+            # Standard GPT-2 uses tied embeddings.
+            self.lm_head.W = self.token_embedding.W.T.contiguous()
+        self.lm_head.b = torch.zeros(1, self.lm_head.W.shape[0], device=self.device)
 
     def forward(self, X, eval=False):
         """
@@ -36,30 +93,42 @@ class IrishChat:
           logits: (batch_size, seq_len, vocab_size)
           outputs: (batch_size, seq_len, hidden_size) final hidden states over time.
         """
-        # TODO: Calculate the output of the network
-        for layer in self.layers:
-            if isinstance(layer, Transformer):
-                X = layer.forward(X, causal=True)
-            else:
-                X = layer.forward(X)
+        key_pad_mask = (X == self.padding_idx)
+        B, T = X.shape
+
+        tok = self.token_embedding.forward(X)
+        pos = self.positional_embedding.forward(batch_size=B, seq_len=T)
+        X = tok + pos
+
+        for block in self.transformer_blocks:
+            X = block.forward(X, key_pad_mask=key_pad_mask)
+
+        X = self.final_ln.forward(X)
+        X = self.lm_head.forward(X)
 
         return self.softmax(X)
 
     def backward(self, Y_hat, Y):
-        # TODO: Calculate the gradient of the loss with respect to the input
-        for layer in self.layers:
-            if hasattr(layer, "zero_grads"):
-                layer.zero_grads()
-
         mask = (Y.argmax(dim=-1) != self.padding_idx).unsqueeze(-1).float()
         normalizer = mask.sum().clamp_min(1.0)
         dA = (Y_hat - Y) * mask / normalizer
 
-        for layer in reversed(self.layers):
-            if isinstance(layer, Transformer):
-                dA = layer.backward(dA, causal=True)
-            else:
-                dA = layer.backward(dA)
+        dA = self.lm_head.backward(dA)
+        dA = self.final_ln.backward(dA)
+
+        for block in reversed(self.transformer_blocks):
+            dA = block.backward(dA)
+
+        self.positional_embedding.backward(dA)
+        self.token_embedding.backward(dA)
+
+    def update(self, lr):
+        self.token_embedding.update(lr)
+        self.positional_embedding.update(lr)
+        for block in self.transformer_blocks:
+            block.update(lr)
+        self.final_ln.update(lr)
+        self.lm_head.update(lr)
 
     def softmax(self, X):
         """
@@ -117,7 +186,7 @@ class IrishChat:
         normalizer = mask.sum().clamp_min(1.0)
         return correct.sum() / normalizer
 
-    def chat(self, prompt_tokens, max_new_tokens=200, temperature=1.0):
+    def chat(self, prompt_tokens, max_new_tokens=200, temperature=1.0, eos_token_id=258):
         """
         Autoregressive generation.
 
@@ -156,8 +225,8 @@ class IrishChat:
                 torch.tensor([[next_token]], dtype=torch.long, device=self.device)
             ], dim=1)
 
-            # Stop if we hit the EOS token (258 for Regex_Tokenizer)
-            if next_token == 258:
+            # Stop when EOS is produced for the active tokenizer.
+            if eos_token_id is not None and next_token == eos_token_id:
                 break
 
         return tokens[0].tolist()
@@ -210,8 +279,7 @@ class IrishChat:
                 
                 # Update parameters
                 # TODO: Update the weights and biases of the layer using the learning rate
-                for layer in self.layers:
-                    layer.update(learning_rate)
+                self.update(learning_rate)
 
             loss_history.append(np.mean(batch_losses))
             accuracy_history.append(np.mean(batch_accuracies))

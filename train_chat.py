@@ -6,12 +6,14 @@ from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 import irishGPT.tokenizer as tokenizer
+from irishGPT.gpt2_tokenizer import GPT2Tokenizer
+import argparse
 
 class IrishChatDataset(Dataset):
-    def __init__(self, training_file):
+    def __init__(self, training_file, tokenizer_path):
         self.tokenizer = tokenizer.Regex_Tokenizer()
 
-        self.tokenizer.load('Datasets/openweb10k_tokenizer.json')
+        self.tokenizer.load(tokenizer_path)
         # self.tokenizer.train(uts.get_file_as_string(training_file), 512)
         self.device = torch.device('cuda' if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
@@ -39,18 +41,46 @@ class IrishChatDataset(Dataset):
         return X.to(self.device), Y.to(self.device)
 
 if __name__ == "__main__":
-    chat = IrishChat(vocab_size=3200)
-    dataset = IrishChatDataset("Datasets/openweb10k.txt")
-    train_loader = DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=dataset.collate)
-    chat.train(train_loader, 500, 0.01, verbose=True)
+    parser = argparse.ArgumentParser(description="Train/infer IrishChat model variants")
+    parser.add_argument("--mode", choices=["legacy", "gpt2"], default="legacy")
+    parser.add_argument("--temperature", type=float, default=0.8)
+    parser.add_argument("--max_new_tokens", type=int, default=200)
+    parser.add_argument("--train_epochs", type=int, default=0)
+    parser.add_argument("--learning_rate", type=float, default=0.01)
+    parser.add_argument("--legacy_tokenizer", default="Datasets/openweb10k_tokenizer.json")
+    parser.add_argument("--dataset", default="Datasets/openweb10k.txt")
+    parser.add_argument("--gpt2_checkpoint", default="Datasets/gpt2_small_converted.pt")
+    parser.add_argument("--gpt2_vocab", default="Datasets/gpt2_tokenizer_assets/vocab.json")
+    parser.add_argument("--gpt2_merges", default="Datasets/gpt2_tokenizer_assets/merges.txt")
+    args = parser.parse_args()
+
+    if args.mode == "legacy":
+        chat = IrishChat(vocab_size=3200)
+        dataset = IrishChatDataset(args.dataset, args.legacy_tokenizer)
+
+        if args.train_epochs > 0:
+            train_loader = DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=dataset.collate)
+            chat.train(train_loader, args.train_epochs, args.learning_rate, verbose=True)
+
+        active_tokenizer = dataset.tokenizer
+        eos_token_id = 258
+        prompt_encoder = lambda p: active_tokenizer.encode("<|sos|>" + p + "<|eos|>")[:-1]
+        output_decoder = active_tokenizer.decode
+    else:
+        chat = IrishChat.gpt2_small()
+        chat.load_converted_gpt2_checkpoint(args.gpt2_checkpoint)
+        active_tokenizer = GPT2Tokenizer(args.gpt2_vocab, args.gpt2_merges)
+        eos_token_id = 50256
+        prompt_encoder = active_tokenizer.encode
+        output_decoder = active_tokenizer.decode
 
     # Interactive chat loop
     print("\n" + "=" * 50)
-    print("IrishGPT ready! Type a prompt and press Enter.")
+    print(f"IrishGPT ready ({args.mode} mode). Type a prompt and press Enter.")
     print("Commands: /temp <value> to change temperature, /quit to exit")
     print("=" * 50 + "\n")
 
-    temperature = 0.8
+    temperature = args.temperature
     while True:
         try:
             prompt = input("You: ")
@@ -71,6 +101,11 @@ if __name__ == "__main__":
                 print(f"  Current temperature: {temperature}")
             continue
 
-        prompt_tokens = dataset.tokenizer.encode("<|sos|>" + prompt + "<|eos|>")[:-1]
-        output_tokens = chat.chat(prompt_tokens, max_new_tokens=200, temperature=temperature)
-        print(f"IrishGPT: {dataset.tokenizer.decode(output_tokens)}\n")
+        prompt_tokens = prompt_encoder(prompt)
+        output_tokens = chat.chat(
+            prompt_tokens,
+            max_new_tokens=args.max_new_tokens,
+            temperature=temperature,
+            eos_token_id=eos_token_id,
+        )
+        print(f"IrishGPT: {output_decoder(output_tokens)}\n")
