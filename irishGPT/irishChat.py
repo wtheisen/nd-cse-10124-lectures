@@ -11,12 +11,12 @@ from .layer_norm import LayerNorm
 class IrishChat:
     def __init__(
         self,
-        vocab_size: int = 512,
+        vocab_size: int = 50257,
         ctx_len: int = 1024,
-        d_model: int = 128,
-        n_layers: int = 1,
-        n_heads: int = 1,
-        use_gelu: bool = False,
+        d_model: int = 768,
+        n_layers: int = 12,
+        n_heads: int = 12,
+        use_gelu: bool = True,
     ):
         self.padding_idx = 256
         self.ctx_len = ctx_len
@@ -35,17 +35,6 @@ class IrishChat:
         ]
         self.final_ln = LayerNorm(d_model, device=self.device)
         self.lm_head = LinearLayer(d_model, vocab_size, device=self.device)
-
-    @classmethod
-    def gpt2_small(cls):
-        return cls(
-            vocab_size=50257,
-            ctx_len=1024,
-            d_model=768,
-            n_layers=12,
-            n_heads=12,
-            use_gelu=True,
-        )
 
     def load_converted_gpt2_checkpoint(self, checkpoint_path):
         """

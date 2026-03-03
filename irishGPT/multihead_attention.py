@@ -19,9 +19,6 @@ class MultiHeadAttention:
     )
 
     def __init__(self, model_dim, n_heads, device="cpu", causal=True):
-        if model_dim % n_heads != 0:
-            raise ValueError("model_dim must be divisible by n_heads")
-
         self.C = model_dim
         self.H = n_heads
         self.Dh = model_dim // n_heads
