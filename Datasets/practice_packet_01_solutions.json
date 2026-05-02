@@ -1,0 +1,687 @@
+[
+  {
+    "instruction": "In the context of LLMs and language modeling: In your own words, explain what a Large Language Model (LLM) is and how it generates text.",
+    "input": "",
+    "output": "A Large Language Model is a neural network trained on massive amounts of text data that learns to predict the next token in a sequence. During generation, it repeatedly predicts one token at a time, using all previously generated tokens as context, to produce coherent text."
+  },
+  {
+    "instruction": "In the context of LLMs and language modeling: What does \"next-token prediction\" mean? Why is this the core task that LLMs are trained to perform?",
+    "input": "",
+    "output": "Next-token prediction means the model looks at all the tokens it has seen so far and predicts what the next token should be. This is the core task because language can be modeled as a sequential prediction problem -- if a model can accurately predict what comes next, it has effectively learned grammar, facts, reasoning patterns, and other linguistic structures."
+  },
+  {
+    "instruction": "In the context of LLMs and language modeling: Name three real-world applications of Large Language Models.",
+    "input": "",
+    "output": "(1) Chatbots and virtual assistants (e.g., ChatGPT), (2) Code generation and programming assistance, (3) Text summarization and translation."
+  },
+  {
+    "instruction": "In the context of LLMs and language modeling: Explain the difference between the training phase and the inference phase of an LLM.",
+    "input": "",
+    "output": "Training phase: The model learns from large datasets by adjusting its internal weights to minimize prediction error. This requires massive computation and data.\nInference phase: The trained model is used to generate predictions/text for new inputs. No weight updates occur -- the model just applies what it learned."
+  },
+  {
+    "instruction": "In the context of LLMs and language modeling: In the context of language modeling, what is a \"token\"? How is it different from a \"word\"?",
+    "input": "",
+    "output": "A token is the basic unit of text that the model processes. It can be a whole word, a subword, or even a single character. Words are natural linguistic units, but tokens are defined by the tokenizer and may split words into pieces (e.g., \"unhappiness\" might become [\"un\", \"happiness\"]) or combine common phrases."
+  },
+  {
+    "instruction": "In the context of LLMs and language modeling: Why is natural language considered difficult for computers to process compared to structured data like spreadsheets?",
+    "input": "",
+    "output": "Natural language is ambiguous -- words can have multiple meanings (e.g., \"bank\" can mean a financial institution or a river bank). Language also involves context-dependent interpretation, idioms, sarcasm, implicit meaning, and cultural context that are hard to capture formally."
+  },
+  {
+    "instruction": "In the context of LLMs and language modeling: What is the difference between a \"language model\" and a \"chatbot\"? Can a language model be used without being a chatbot?",
+    "input": "",
+    "output": "A language model is a system that predicts the probability of the next token given previous tokens -- it simply models language patterns. A chatbot is an application that holds conversations with users, typically built on top of a language model with additional training and interface. Yes, a language model can be used without being a chatbot -- for example, for text completion, classification, or summarization, without any conversational interface. The key distinction: a language model is a trained neural network; a chatbot is an application built using a language model. Not all language models are chatbots, but modern chatbots use language models. A language model just does \"next-token prediction.\""
+  },
+  {
+    "instruction": "In the context of text as data: What is ASCII? How many characters can standard ASCII represent? How does extended ASCII differ from standard ASCII?",
+    "input": "",
+    "output": "ASCII is a character encoding standard that represents text as numbers. Standard ASCII uses 7 bits and can represent 128 characters (0-127). Extended ASCII uses 8 bits and can represent 256 characters (0-255), adding accented letters, symbols, and box-drawing characters."
+  },
+  {
+    "instruction": "In the context of text as data: What is Unicode? How does it differ from ASCII?",
+    "input": "",
+    "output": "Unicode is a universal character encoding standard that assigns a unique number (called a code point) to every character in every language, plus emojis and symbols. It differs from ASCII by supporting over 150,000 characters from all writing systems worldwide, while ASCII only handles 128 English characters."
+  },
+  {
+    "instruction": "In the context of text as data: What is UTF-8 encoding? How many bytes can a single UTF-8 character use?",
+    "input": "",
+    "output": "UTF-8 is a variable-length encoding for Unicode. A single character can use 1 to 4 bytes. ASCII characters use 1 byte, making UTF-8 backward-compatible with ASCII. Characters from other languages use 2-4 bytes."
+  },
+  {
+    "instruction": "In the context of text as data: Given the character '金', write the Python code to convert it to a list of UTF-8 byte values.",
+    "input": "",
+    "output": "text = '金'\nutf8_bytes = list(text.encode('utf-8'))\nprint(utf8_bytes)  # Output: [233, 135, 145]"
+  },
+  {
+    "instruction": "In the context of text as data: What is a text corpus? Give three examples of different types of text corpora.",
+    "input": "",
+    "output": "A text corpus is a large, structured collection of text used for training language models. Examples: (1) Wikipedia, a collection of news articles, a library of books (e.g., Project Gutenberg), or the Common Crawl web scrape."
+  },
+  {
+    "instruction": "In the context of text as data: What is the process of text normalization? Name three common text normalization techniques.",
+    "input": "",
+    "output": "Text normalization is the process of converting raw text into a consistent, standardized form for processing. Three techniques: (1) Lowercasing all text, (2) Removing punctuation, (3) Stemming or lemmatization (reducing words to root forms)."
+  },
+  {
+    "instruction": "In the context of text as data: What are \"stop words\"? Why might you want to remove them when analyzing text? Give three examples of stop words.",
+    "input": "",
+    "output": "Stop words are very common words that carry little meaningful content on their own (e.g., \"the,\" \"is,\" \"and\"). Removing them can reduce noise in the data and focus analysis on more meaningful content words. However, for LLMs we typically keep stop words because they matter for language structure."
+  },
+  {
+    "instruction": "In the context of text as data: What is a bigram model? How does it generate text differently from a unigram model?",
+    "input": "",
+    "output": "A bigram model predicts the next word based on the previous word only. It builds a transition graph (like a Markov chain) that records which words follow which other words. A unigram model picks words based on their overall frequency, ignoring context entirely. The bigram model produces more coherent text because it considers one word of context."
+  },
+  {
+    "instruction": "In the context of text as data: What is a \"vocabulary\" in the context of NLP? What problem arises if a word appears in the input but is not in the vocabulary?",
+    "input": "",
+    "output": "A vocabulary is the complete set of unique tokens that the model knows and can process. If a word is not in the vocabulary, it creates an out-of-vocabulary (OOV) problem -- the model cannot represent or process that word. Subword tokenization (like BPE) helps solve this problem."
+  },
+  {
+    "instruction": "In the context of text as data: What is the difference between a character-level and a word-level tokenizer? List one advantage and one disadvantage of each.",
+    "input": "",
+    "output": "Character-level: Each character is a separate token.\nAdvantage: Very small vocabulary (just ~256 characters), never has OOV problem.\nDisadvantage: Sequences are very long, making training slow and making it hard to capture relationships between characters that form meaningful units.\n\nWord-level: Each word is a separate token.\nAdvantage: Tokens are semantically meaningful, sequences are shorter.\nDisadvantage: Huge vocabularies (every unique word needs an entry, potentially hundreds of thousands of words), and any word not in the vocabulary can't be represented (OOV problem)."
+  },
+  {
+    "instruction": "In the context of tokenization: What is the out-of-vocabulary (OOV) problem? Why does it occur with word-level tokenizers?",
+    "input": "",
+    "output": "The OOV problem occurs when the model encounters a word that is not in its vocabulary, so it cannot represent it. This happens with word-level tokenizers because they assign a token to each unique word seen during training. Any new word not in the training data has no token and cannot be processed."
+  },
+  {
+    "instruction": "In the context of tokenization: How does subword tokenization (like BPE) solve the out-of-vocabulary problem?",
+    "input": "",
+    "output": "Subword tokenization breaks unknown words into smaller known subword pieces. Even if the full word was never seen, its parts likely were. For example, \"unhappiness\" might become [\"un\", \"happi\", \"ness\"], all of which are in the vocabulary."
+  },
+  {
+    "instruction": "In the context of tokenization: Given the vocabulary {\"the\": 0, \"cat\": 1, \"sat\": 2, \"on\": 3, \"mat\": 4}, encode the sentence \"the cat sat on the mat\" as a list of token IDs.",
+    "input": "",
+    "output": "[0, 1, 2, 3, 0, 4]"
+  },
+  {
+    "instruction": "In the context of tokenization: If a tokenizer has a vocabulary of 50,000 tokens, what are the valid token IDs?",
+    "input": "",
+    "output": "0 to 49,999 (integers starting from 0)."
+  },
+  {
+    "instruction": "In the context of tokenization: Explain why subword tokenization is considered a \"middle ground\" between character-level and word-level tokenization.",
+    "input": "",
+    "output": "Subword tokenization balances the tradeoffs: it keeps common words as single tokens (like word-level) for efficiency, while breaking rare/unknown words into character or subword pieces (like character-level) to handle any input. This gives manageable vocabulary sizes (~30K-50K tokens) while avoiding OOV problems."
+  },
+  {
+    "instruction": "In the context of tokenization: What is a token ID? Why do we assign numeric IDs to tokens instead of using the text directly?",
+    "input": "",
+    "output": "A token ID is a unique integer assigned to each token in the vocabulary. We use numeric IDs because neural networks operate on numbers, not text. The IDs serve as indices to look up the token's embedding vector in the embedding matrix."
+  },
+  {
+    "instruction": "In the context of tokenization: Consider this sequence of tokens: [\"The\", \"quick\", \"brown\", \"fox\"]. How many bigrams can be extracted?",
+    "input": "",
+    "output": "Three bigrams: (\"The\", \"quick\"), (\"quick\", \"brown\"), (\"brown\", \"fox\"). For a sequence of n tokens, there are n-1 bigrams."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: What does BPE stand for? Describe the main idea of BPE tokenization in 2-3 sentences.",
+    "input": "",
+    "output": "BPE stands for Byte Pair Encoding. The main idea is to start with individual characters (or bytes) as the initial vocabulary, then iteratively find the most frequently occurring pair of adjacent tokens in the training data and merge them into a new single token. This process repeats for a set number of merges, building up a vocabulary of common subwords."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: In BPE, what is a \"merge rule\"? How are merge rules determined?",
+    "input": "",
+    "output": "A merge rule specifies two adjacent tokens that should be combined into one new token. Merge rules are determined by counting the frequency of all adjacent token pairs in the corpus and selecting the most frequent pair to merge. This is repeated iteratively."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: Given the following pair frequencies from a corpus, which pair would BPE merge first? Why?",
+    "input": "(t, h): 15, (h, e): 12, (e, r): 8",
+    "output": "BPE would merge (t, h) first because it has the highest frequency (15). BPE always merges the most frequent pair."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: If you start with 256 byte-level tokens and perform 49,744 BPE merges, what is the final vocabulary size?",
+    "input": "",
+    "output": "256 + 49,744 = 50,000 tokens. Each merge adds exactly one new token to the vocabulary."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: What is the difference between \"training\" a BPE tokenizer and \"using\" (applying) one?",
+    "input": "",
+    "output": "Training: You analyze a large corpus to learn which pairs to merge and in what order (building the merge rules). Using: You take those learned merge rules and apply them to new text to tokenize it -- you split the text into characters, then apply each merge rule in the order it was learned."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: Trace through one iteration of BPE on this tiny corpus: [\"l o w\", \"l o w\", \"l o w e r\", \"n e w\", \"n e w e r\"]",
+    "input": "Count all adjacent pairs:\n(l, o): appears in \"l o w\" x2 + \"l o w e r\" x1 = 3\n(o, w): appears in \"l o w\" x2 + \"l o w e r\" x1 = 3\n(w, e): appears in \"l o w e r\" x1 + \"n e w e r\" x1 = 2... wait, \"w e\" only in \"l o w e r\" and not in \"n e w\" directly.",
+    "output": "Let me recount carefully:\nCorpus has 5 entries: \"l o w\", \"l o w\", \"l o w e r\", \"n e w\", \"n e w e r\"\n(l, o): 3, (o, w): 3, (w, e): 1 (in \"l o w e r\"), (e, r): 2, (n, e): 2, (e, w): 2\nMost frequent: (l, o) or (o, w) with 3 each. Pick one (e.g., (l, o)). Merge into \"lo\".\nResult: [\"lo w\", \"lo w\", \"lo w e r\", \"n e w\", \"n e w e r\"]"
+  },
+  {
+    "instruction": "In the context of BPE tokenization: Why does BPE start with individual bytes (or characters) rather than whole words?",
+    "input": "",
+    "output": "Starting with bytes/characters ensures that any possible text can be represented -- every string is just a sequence of bytes. This eliminates the OOV problem entirely since even unknown words can be represented as a sequence of byte-level tokens."
+  },
+  {
+    "instruction": "In the context of BPE tokenization: How does BPE handle very frequent words differently from rare words in terms of token count?",
+    "input": "",
+    "output": "Very frequent words tend to get merged into single tokens (or very few tokens) because their character pairs appear often and get merged early. Rare words may not have their pairs merged, so they remain represented as a sequence of byte-level tokens."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: What are \"special tokens\" in a tokenizer? Name two special tokens used by GPT models and explain their purpose.",
+    "input": "",
+    "output": "(1) <|bos|> (beginning of sequence): Marks the beginning of a text sequence, telling the model a new sequence is starting.\n(2) <|eos|> (end of sequence): Marks the end of a text sequence, signaling the model to stop generating."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: Why do non-English languages typically require more tokens per sentence than English when using GPT's tokenizer?",
+    "input": "",
+    "output": "GPT's tokenizer was primarily trained on English text, so English words are well-represented in the vocabulary as common subwords or whole tokens. Non-English text uses character combinations that weren't frequently merged during BPE training, so they get split into more, smaller tokens."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: Explain the \"strawberry\" problem -- why might an LLM struggle to count the number of 'r's in \"strawberry\"?",
+    "input": "",
+    "output": "The tokenizer may split \"strawberry\" into subword tokens like \"straw\" + \"berry\" or \"str\" + \"aw\" + \"berry.\" The model never sees individual characters -- it sees tokens. Since the 'r' characters are distributed across different tokens and the model processes tokens not characters, it has difficulty performing character-level counting tasks. This is a fundamental limitation of tokenization."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: Given this Python code, explain what each line does:",
+    "input": "import tiktoken\nenc = tiktoken.get_encoding(\"cl100k_base\")\ntokens = enc.encode(\"Hello world\")\nprint(tokens)\nprint(len(tokens))",
+    "output": "Line 1: Import the tiktoken library (OpenAI's tokenizer library).\nLine 2: Load the cl100k_base encoding (GPT-4's tokenizer with ~100K vocabulary).\nLine 3: Tokenize the string \"Hello world\" into a list of token IDs.\nLine 4: print(tokens) -- prints the list of token IDs.\nLine 5: print(len(tokens)) -- prints how many tokens the string was split into."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: Rank the following strings from fewest to most tokens and explain your reasoning:",
+    "input": "",
+    "output": "1. \"Hello\" -- likely 1 token (common English word)\n2. \"The quick brown fox\" -- likely 4 tokens (4 common English words)\n3. \"こんにちは\" -- likely 5+ tokens (Japanese characters require more tokens.\n4. \"xQz7!@\" -- likely 5-6 tokens (unusual character combinations)\n\nRanking: \"Hello\" (1) < \"The quick brown fox\" (4) < \"こんにちは\" or \"xQz7!@\" (5-6)\nCommon English words are usually single tokens; non-English and random strings use more."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: Tokenize these strings mentally and rank them by token count: \"the\", \"indistinguishable\", \"été\", \"123456789\"",
+    "input": "",
+    "output": "\"the\": 1 token (extremely common)\n\"indistinguishable\": 2-3 tokens (long but has common subwords)\n\"été\": 2-3 tokens (French word, the accented \"é\" may cause an extra token depending on the tokenizer.\n\"123456789\": 2-3 tokens (numbers are usually grouped in chunks of 3 digits).\nRanking: \"the\" (1) < \"123456789\" ≈ \"été\" (2-3) < \"indistinguishable\" (2-3)"
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: If a tokenizer splits \"unfortunately\" into [\"un\", \"fortunate\", \"ly\"], what does this tell you about how BPE handles morphology?",
+    "input": "",
+    "output": "This shows BPE naturally discovers morphological units (prefixes, roots, suffixes) through frequency-based merging. \"un\" is a common prefix, \"fortunate\" is a common root, and \"ly\" is a common suffix. BPE doesn't know about grammar -- it just finds that these pieces appear frequently as a single token. The subwords \"un-\" (prefix), \"fortunate\" (root), and \"-ly\" (suffix) are all common patterns that got merged during training."
+  },
+  {
+    "instruction": "In the context of the GPT-4 tokenizer: A service processes 10,000 prompts/day. Each prompt averages 50 tokens. The cost is $0.01 per 1,000 tokens. What is the daily cost? How could reducing average tokens per prompt to 30 save money?",
+    "input": "",
+    "output": "At 50 tokens/prompt: 10,000 * 50 = 500,000 tokens/day\nCost: 500,000 / 1,000 * $0.01 = $5.00/day\nAt 30 tokens/prompt: 10,000 * 30 = 300,000 tokens/day\nCost: 300,000 / 1,000 * $0.01 = $3.00/day\nSavings: $2.00/day (40% reduction)"
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: What is one-hot encoding? If your vocabulary has 50,000 words, what is the dimensionality of a one-hot vector? What is the main disadvantage?",
+    "input": "",
+    "output": "One-hot encoding represents each item as a vector of all zeros with a single 1 at the position corresponding to that item's index. With 50,000 words, each vector has 50,000 dimensions. The main disadvantage: the vectors are extremely sparse and carry no semantic information -- \"cat\" and \"dog\" are just as \"different\" as \"cat\" and \"airplane.\""
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: What is an embedding matrix? If the vocabulary size is 50,000 and each embedding has 768 dimensions, what is the shape of the embedding matrix?",
+    "input": "",
+    "output": "The embedding matrix is 50,000 x 768. Each row represents the embedding vector for one token. To get a token's embedding, you look up its row using the token ID as an index."
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: Given vectors A = [1, 2, 3] and B = [4, 6, 3]. Show your work.",
+    "input": "",
+    "output": "d = sqrt((4-1)^2 + (6-2)^2 + (3-3)^2)\nd = sqrt(9 + 16 + 0) = sqrt(25) = 5"
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: What does it mean for embeddings to encode semantic relationships? Give one famous example (hint: \"king\").",
+    "input": "",
+    "output": "Semantic relationships are captured as consistent vector offsets in the vector space. The vector from \"man\" to \"king\" represents the concept of \"royalty.\" Applying the same offset from \"woman\" gives \"queen\": king - man + woman ≈ queen. This shows the model learned that relationships between words correspond to directions in embedding space."
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: Are word embeddings in modern LLMs hand-designed or learned? Explain.",
+    "input": "",
+    "output": "Embeddings are learned from context during training. The model adjusts the embedding vectors through backpropagation so that words appearing in similar contexts end up with similar vectors close together in the embedding space."
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: Classify each feature type:",
+    "input": "",
+    "output": "a.) Temperature in Celsius -- Continuous (can take any real value)\nb.) Movie genre -- Categorical (discrete, no order)\nc.) Student letter grade (A-F) -- Ordinal (discrete with meaningful order)\nd.) Number of siblings -- Discrete/Count (integer values)"
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: What is the \"curse of dimensionality\"? Why does it matter for embeddings?",
+    "input": "",
+    "output": "The curse of dimensionality means that as the number of dimensions increases, the volume of the space grows exponentially, making data increasingly sparse. Points become approximately equidistant from each other. For embeddings, this means you need enough training data to meaningfully populate the high-dimensional space, and distance metrics can become less meaningful."
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: If you compute Euclidean distance using both features, which one dominates? Why is this a problem? How would you fix it?",
+    "input": "",
+    "output": "The feature with the larger range dominates the distance calculation. If \"Age\" ranges 18-25 (range of 7) and \"Annual Income\" ranges 30,000-100,000 (range of 70,000), income differences will completely overwhelm age differences. Fix: Normalize or standardize both features to the same scale (e.g., min-max normalization to [0,1] or z-score normalization)."
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: Why don't we one-hot encode tokens for LLMs? Give two reasons.",
+    "input": "",
+    "output": "(1) One-hot vectors are extremely high-dimensional and sparse (50,000 dimensions with only one non-zero value), making computation wasteful. (2) One-hot vectors contain no semantic information -- every pair of tokens is equally \"different,\" so the model can't leverage similarities between related words."
+  },
+  {
+    "instruction": "In the context of high dimensional data and embeddings: Two features: \"Age\" (range 18-25) and \"Annual Income\" (range $30,000-$100,000). Show with a concrete example why normalization is important.",
+    "input": "",
+    "output": "Example: Person A (Age=20, Income=40,000) and Person B (Age=22, Income=90,000).\nWithout normalization: d = sqrt((22-20)^2 + (90000-40000)^2) = sqrt(4 + 2,500,000,000) ≈ 50,000. The age difference (2 years) is completely invisible.\nWith min-max normalization: Age: (20-18)/7=0.29, (22-18)/7=0.57. Income: (40000-30000)/70000=0.14, (90000-30000)/70000=0.86.\nd = sqrt((0.57-0.29)^2 + (0.86-0.14)^2) = sqrt(0.08+0.52) = 0.77. Now both features contribute meaningfully."
+  },
+  {
+    "instruction": "In the context of loss functions: What is a loss function? Why do we need one to train a model?",
+    "input": "",
+    "output": "A loss function is a mathematical function that measures how wrong the model's predictions are compared to the correct answers. We need one because training works by minimizing this loss -- the loss provides the signal that tells the model which direction to adjust its weights. Without a loss function, the model would have no way to know if its predictions are getting better or worse."
+  },
+  {
+    "instruction": "In the context of loss functions: What is cross-entropy loss? In one sentence, what does it measure?",
+    "input": "",
+    "output": "Cross-entropy loss measures how surprised the model is by the correct answer -- specifically, it is the negative log of the probability the model assigned to the correct answer."
+  },
+  {
+    "instruction": "In the context of loss functions: Given the following scenario, would the cross-entropy loss be LOW, MEDIUM, or HIGH?",
+    "input": "",
+    "output": "a.) 95% confident, correct answer is \"Paris\" -> LOW. The model is very confident and correct, so -log(0.95) is small (~0.05).\nb.) 50% confident, correct answer is \"Paris\" -> MEDIUM. The model is uncertain, so -log(0.50) is moderate (~0.69).\nc.) 5% confident, correct answer is \"Paris\" -> HIGH. The model assigned very low probability to the correct answer, so -log(0.05) is large (~3.0).\nd.) 90% confident the answer is \"London,\" correct is \"Paris\" -> HIGH. If 90% went to \"London,\" very little probability is left for \"Paris\" (maybe ~10% or less), so the loss is high."
+  },
+  {
+    "instruction": "In the context of loss functions: Compute the loss when p = 0.7.",
+    "input": "",
+    "output": "CE = -log(p) = -log(0.7) = -(-0.357) = 0.357"
+  },
+  {
+    "instruction": "In the context of loss functions: What is the \"loss landscape\"? Using the analogy of a hilly terrain, explain what it means to \"minimize the loss.\"",
+    "input": "",
+    "output": "The loss landscape is a conceptual surface where each point represents a particular set of model weights and the height at that point represents the loss value. Minimizing the loss is like trying to find the lowest valley in hilly terrain -- we start at some random point on the surface and use gradient descent to step downhill, gradually moving toward lower and lower loss values until we reach a minimum."
+  },
+  {
+    "instruction": "In the context of loss functions: What are \"logits\"? How do they relate to probabilities? What function converts logits to probabilities?",
+    "input": "",
+    "output": "Logits are the raw, unnormalized output scores from the last layer of a neural network. They can be any real number (positive or negative). The softmax function converts logits to probabilities by exponentiating each value and dividing by the sum of all exponentiated values, ensuring all outputs are between 0 and 1 and sum to 1."
+  },
+  {
+    "instruction": "In the context of loss functions: Two properties of softmax output: (a) all values are _____ and (b) all values sum to _____.",
+    "input": "",
+    "output": "(a) all values are between 0 and 1 (positive)\n(b) all values sum to 1"
+  },
+  {
+    "instruction": "In the context of loss functions: A model outputs logits [2.0, 1.0, 0.5, -1.0] for tokens [the, cat, sat, happy]. Rank from most likely to least likely.",
+    "input": "",
+    "output": "the (2.0) > cat (1.0) > sat (0.5) > happy (-1.0)\n\nSince softmax is a monotonically increasing function, the ranking of logits is preserved in the ranking of probabilities. Higher logit = higher probability."
+  },
+  {
+    "instruction": "In the context of linear transformations: What is a linear layer? Write the mathematical formula (using W, x, and b).",
+    "input": "",
+    "output": "A linear layer computes: y = Wx + b (or equivalently, y = xW^T + b)\n\nWhere W is the weight matrix, x is the input vector, and b is the bias vector. It performs a linear transformation of the input."
+  },
+  {
+    "instruction": "In the context of linear transformations: Given the following values, compute y-hat = Xw^T + b by hand.",
+    "input": "X = [1, 0, -1], w = [[2, 0, 1], [0, 3, -1]], b = [0.5, -0.5]",
+    "output": "Xw^T means X times each row of w:\nOutput 1: [1, 0, -1] . [2, 0, 1] = 1*2 + 0*0 + (-1)*1 = 2 + 0 - 1 = 1\nOutput 2: [1, 0, -1] . [0, 3, -1] = 1*0 + 0*3 + (-1)*(-1) = 0 + 0 + 1 = 1\n\nXw^T = [1, 1]\n\nAdd bias: [1, 1] + [0.5, -0.5] = [1.5, 0.5]\n\ny-hat = [1.5, 0.5]"
+  },
+  {
+    "instruction": "In the context of linear transformations: If the input has 784 dimensions and the output has 10 dimensions, what are the dimensions of the weight matrix W? What might this represent?",
+    "input": "",
+    "output": "W is 10 x 784 (output_dim x input_dim). This could represent classifying MNIST handwritten digits: the input is a flattened 28x28 grayscale image (784 pixels), and the output is a score for each of the 10 digit classes (0-9)."
+  },
+  {
+    "instruction": "In the context of linear transformations: In the code y = x @ W.T + b, what does the @ operator do in Python/PyTorch?",
+    "input": "",
+    "output": "The @ operator performs matrix multiplication (dot product for vectors, matrix multiply for matrices). It is equivalent to torch.matmul() or np.matmul()."
+  },
+  {
+    "instruction": "In the context of linear transformations: Explain why stacking two linear layers without an activation function in between is no more powerful than a single linear layer.",
+    "input": "",
+    "output": "If layer 1 computes y1 = W1*x + b1 and layer 2 computes y2 = W2*y1 + b2, then substituting:\ny2 = W2*(W1*x + b1) + b2 = (W2*W1)*x + (W2*b1 + b2)\n\nThis simplifies to y2 = W'*x + b' where W' = W2*W1 and b' = W2*b1 + b2. This is just another linear transformation -- two linear layers collapse into one. You need a non-linear activation function between them to gain additional representational power."
+  },
+  {
+    "instruction": "In the context of linear transformations: What is a \"weight\" and what is a \"bias\" in a neural network? What role does each play?",
+    "input": "",
+    "output": "A weight is a learned parameter that determines how much influence each input has on the output -- it scales and combines inputs. A bias is a learned parameter that shifts the output, acting like an offset. Together, they define the linear transformation y = Wx + b. Weights control the slope/direction and bias controls the intercept."
+  },
+  {
+    "instruction": "In the context of linear transformations: Our single linear layer on MNIST achieved about 83% accuracy. Why might a linear model struggle to perfectly separate handwritten digits?",
+    "input": "",
+    "output": "A linear model can only draw straight-line (hyperplane) decision boundaries. Some digits have overlapping patterns that can't be separated by a straight line -- for example, a \"4\" and a \"9\" can look very similar (both have a vertical stroke at the top), and a \"3\" and an \"8\" share similar curved shapes. These require non-linear boundaries to separate reliably."
+  },
+  {
+    "instruction": "In the context of linear transformations: What does \"flattening\" mean, and why is it necessary before passing the image to a linear layer?",
+    "input": "",
+    "output": "Flattening means reshaping a 2D (or multi-dimensional) array into a 1D vector. A 28x28 image is a 2D grid of pixels, but a linear layer expects a 1D vector input. Flattening converts the 28x28 grid into a single vector of 784 values so it can be multiplied by the weight matrix."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: What is gradient descent? Explain it using the \"blindfolded on a hilly landscape\" analogy.",
+    "input": "",
+    "output": "Gradient descent is an optimization algorithm for finding the minimum of a function. Imagine you're blindfolded on a hilly landscape and want to reach the lowest valley. You can't see, but you can feel which direction slopes downward under your feet. You take a step in the steepest downhill direction. Then you feel again and take another step downhill. You keep repeating this, and gradually you descend into a valley (minimum loss)."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: What is the \"learning rate\"? What happens if it is too high? What happens if it is too low?",
+    "input": "",
+    "output": "The learning rate controls how big each step is during gradient descent. If it is too high, the steps are too large and the model may overshoot the minimum, bouncing around or even diverging (loss gets worse). If it is too low, the steps are tiny and training takes extremely long, and the model may get stuck in a local minimum."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: Write the weight update rule for gradient descent.",
+    "input": "",
+    "output": "W_new = W - lr * dW\n\n(New weight = old weight minus learning rate times the gradient)"
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: What is the difference between the \"forward pass,\" \"computing the loss,\" and the \"backward pass\" in a training loop?",
+    "input": "",
+    "output": "Forward pass: Input data flows through the model to produce predictions (y-hat).\nComputing the loss: The predictions are compared to the true labels using the loss function to get a single number measuring how wrong the model is.\nBackward pass: Gradients of the loss with respect to every weight are computed (via backpropagation), telling us how to adjust each weight to reduce the loss."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: What is backpropagation? In one sentence, what does it compute?",
+    "input": "",
+    "output": "Backpropagation is an algorithm that efficiently computes the gradient (partial derivative) of the loss function with respect to every weight in the network, working backwards from the output to the input using the chain rule."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: Given the loss function L = (y_pred - y_true)^2, compute the gradient dL/dy_pred.",
+    "input": "",
+    "output": "Using the power rule and chain rule:\ndL/dy_pred = 2 * (y_pred - y_true)"
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: A model predicts \"London\" with 80% confidence, but the correct answer is \"Paris\" (20% confidence). After one training step, should the probability of \"Paris\" increase or decrease? Should the probability of \"London\" increase or decrease?",
+    "input": "",
+    "output": "The probability of \"Paris\" should increase (the model needs to become more confident in the correct answer). The probability of \"London\" should decrease (the model needs to become less confident in the wrong answer). The gradient will push the weights in a direction that increases the probability assigned to the correct answer."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: What does it mean for a model to \"converge\"? How can you tell from looking at the training loss that the model has converged?",
+    "input": "",
+    "output": "A model has converged when its loss stops decreasing significantly -- it has reached (or is close to) a minimum. You can tell by looking at the training loss curve: at first the loss drops quickly, then it flattens out into a plateau. When the loss is essentially flat and no longer improving, the model has converged."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: What is the difference between \"batch gradient descent\" and \"stochastic gradient descent (SGD)\"?",
+    "input": "",
+    "output": "Batch gradient descent computes the gradient using the entire training dataset before making one weight update. SGD (stochastic gradient descent) computes the gradient and updates weights using only one sample (or a small mini-batch) at a time. SGD is much faster per update and introduces noise that can help escape local minima, but each individual update is less precise."
+  },
+  {
+    "instruction": "In the context of learning weights and gradient descent: The last two lines update the weights and biases. In plain English, what are these lines doing? What does lr control?",
+    "input": "",
+    "output": "self.W -= lr * dW: This subtracts a small fraction of the gradient from the weights. It nudges each weight in the direction that reduces the loss.\nself.b -= lr * db: Same thing for the biases.\nlr (learning rate) controls how big each adjustment step is. A larger lr means bigger steps (faster but less precise), a smaller lr means smaller steps (slower but more precise)."
+  },
+  {
+    "instruction": "In the context of neural networks: What is an activation function? Why are activation functions necessary in neural networks?",
+    "input": "",
+    "output": "An activation function is a non-linear function applied to the output of a linear layer. They are necessary because without them, stacking multiple linear layers would just collapse into a single linear layer (as shown earlier). Activation functions introduce non-linearity, allowing the network to learn complex, non-linear patterns in data."
+  },
+  {
+    "instruction": "In the context of neural networks: What is ReLU? Write the formula and describe what it does to negative values.",
+    "input": "",
+    "output": "ReLU (Rectified Linear Unit): ReLU(x) = max(0, x)\n\nIt keeps positive values unchanged and sets all negative values to zero. It's simple, fast to compute, and works well in practice."
+  },
+  {
+    "instruction": "In the context of neural networks: Apply ReLU to each value: [-2.5, 0.8, -0.1, 3.2, 0.0, -1.7].",
+    "input": "",
+    "output": "[0, 0.8, 0, 3.2, 0, 0]\n\n(All negative values become 0, positive values stay the same, 0 stays 0.)"
+  },
+  {
+    "instruction": "In the context of neural networks: How is GELU different from ReLU? What advantage does it provide?",
+    "input": "",
+    "output": "GELU (Gaussian Error Linear Unit) is a smooth approximation of ReLU. Instead of a sharp cutoff at 0 (like ReLU), GELU smoothly transitions near zero, allowing small negative values to pass through slightly rather than being completely zeroed out. This provides smoother gradients and often leads to better training performance, which is why it's used in Transformers like GPT."
+  },
+  {
+    "instruction": "In the context of neural networks: Compute the output for ReLU and describe how GELU would differ:",
+    "input": "",
+    "output": "x = 5: ReLU = 5. GELU ≈ 5 (almost identical for large positive values).\nx = -5: ReLU = 0. GELU ≈ 0 (almost identical for large negative values).\nx = 0.1: ReLU = 0.1. GELU ≈ 0.054 (slightly less than ReLU, smooth transition).\nx = -0.1: ReLU = 0. GELU ≈ -0.046 (small negative value, not completely zero -- this is the key difference)."
+  },
+  {
+    "instruction": "In the context of neural networks: Consider this PyTorch network for classifying CIFAR-10 images:",
+    "input": "",
+    "output": "a.) 3 * 32 * 32 = 3072 comes from the image dimensions: CIFAR-10 images are 32x32 pixels with 3 color channels (RGB). 3 channels * 32 height * 32 width = 3072 values when flattened.\n\nb.) No ReLU after fc4 because the last layer outputs logits (raw scores for each class). Applying ReLU would zero out negative logits, which would distort the probability distribution when softmax is applied. We want the raw scores to be passed to softmax/cross-entropy loss.\n\nc.) The shrinking dimensions represent the network learning increasingly abstract features. The first layer extracts low-level features from raw pixels, and each subsequent layer compresses and combines them into higher-level concepts, eventually producing just 10 numbers -- one confidence score per class.\n\nd.) Logits are the raw, unnormalized output scores from the final layer. They can be any real number and represent the model's \"confidence\" for each class before being converted to probabilities via softmax."
+  },
+  {
+    "instruction": "In the context of neural networks: What is the softmax function? Why is it applied to the output of a classification network?",
+    "input": "",
+    "output": "Softmax converts a vector of raw logits into a probability distribution. It exponentiates each value and divides by the sum of all exponentiated values: softmax(x_i) = e^(x_i) / sum(e^(x_j)). It's applied to classification networks because we want the output to be interpretable as probabilities (all positive, sum to 1), so we can say \"the model thinks this is 80% likely to be a cat.\""
+  },
+  {
+    "instruction": "In the context of neural networks: What is \"overfitting\"? How can you detect it? Describe what happened on CIFAR-10.",
+    "input": "",
+    "output": "Overfitting is when a model learns the training data too well, including its noise and specific patterns, and fails to generalize to new unseen data. You detect it by comparing training loss and test loss: if training loss keeps decreasing but test loss starts increasing (or plateaus), the model is overfitting. On CIFAR-10, training accuracy reached ~68% but test accuracy plateaued around 48-50%, and test loss started going up while training loss kept going down -- the model was memorizing the training images instead of learning general features."
+  },
+  {
+    "instruction": "In the context of neural networks: What are MNIST and CIFAR-10? How are they used when learning about neural networks?",
+    "input": "",
+    "output": "MNIST is a dataset of 70,000 grayscale 28x28 handwritten digit images (0-9). CIFAR-10 is a dataset of 60,000 color 32x32 images across 10 classes (airplane, car, bird, cat, deer, dog, frog, horse, ship, truck). They are standard benchmark datasets used to learn and test neural network architectures -- MNIST is simpler (good for beginners), while CIFAR-10 is more challenging (color images, more complex objects)."
+  },
+  {
+    "instruction": "In the context of neural networks: Explain the difference between \"training\" and \"evaluating.\" Why do we use @torch.no_grad() during evaluation?",
+    "input": "",
+    "output": "Training: The model makes predictions, computes loss, computes gradients (backprop), and updates weights. The model is learning and changing.\nEvaluating: The model makes predictions on test data to measure performance, but no weight updates occur.\n@torch.no_grad() is used during evaluation because we don't need gradients (no backprop/weight updates). It saves memory and computation by telling PyTorch not to track operations for gradient computation."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: What is a Recurrent Neural Network (RNN)? How does it differ from a standard feedforward neural network?",
+    "input": "",
+    "output": "An RNN is a neural network designed for sequential data. Unlike a feedforward network that processes each input independently, an RNN has a \"hidden state\" that gets updated at each time step, carrying information from previous inputs. This allows it to maintain a form of memory across a sequence, making it suitable for tasks like language modeling where word order matters."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: What is a \"hidden state\" in an RNN? What information does it carry?",
+    "input": "",
+    "output": "The hidden state is a vector that serves as the RNN's \"memory.\" At each time step, it is updated based on the current input and the previous hidden state. It carries a compressed summary of all the information the network has seen so far in the sequence. It's the mechanism that allows the RNN to use context from earlier tokens when processing later tokens."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: Why are RNNs well-suited for processing sequences like text? What is the key property that makes them different from MLPs?",
+    "input": "",
+    "output": "RNNs process inputs one at a time in order and maintain a hidden state that carries information from previous steps. This sequential processing with memory is what makes them different from MLPs, which treat each input independently with no notion of order or history. For text, word order matters (\"dog bites man\" vs. \"man bites dog\"), and RNNs capture this through their sequential hidden state updates."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: Explain why the hidden state becomes a problem for long sequences.",
+    "input": "",
+    "output": "The hidden state is a fixed-size vector that must compress all information from the entire sequence so far. As the sequence gets longer, earlier information gets increasingly diluted as new information is added. If token at position 5 is critical for predicting position 500, that information has been processed through ~495 updates, each potentially overwriting or degrading it. The fixed-size hidden state creates a \"bottleneck\" that loses information over long distances."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: How does an RNN generate text? Starting from a prompt, describe the step-by-step process.",
+    "input": "",
+    "output": "(1) Encode the prompt tokens one by one through the RNN, updating the hidden state at each step. (2) After processing the full prompt, use the final hidden state to predict the next token (by passing it through an output layer and softmax). (3) Select the predicted token (e.g., the highest probability token). (4) Feed the predicted token back into the RNN as the next input, updating the hidden state. (5) Repeat steps 2-4, generating one token at a time until an end token is produced or a maximum length is reached."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: What is the \"vanishing gradient problem\"? Why does it specifically affect RNNs?",
+    "input": "",
+    "output": "The vanishing gradient problem occurs when gradients become extremely small as they are propagated backward through many time steps during backpropagation. In RNNs, the gradient must flow through every time step in the sequence. At each step it gets multiplied by the same weight matrix, and if these values are less than 1, the gradient shrinks exponentially. This means the model can't learn from long-range dependencies because the gradient signal from distant tokens effectively disappears."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: What is the difference between an RNN and an LSTM? What problem does the LSTM solve?",
+    "input": "",
+    "output": "An LSTM (Long Short-Term Memory) is a special type of RNN that adds a \"cell state\" with gating mechanisms (forget gate, input gate, output gate). These gates control what information to keep, what to add, and what to output. The LSTM solves the vanishing gradient problem by providing a direct path for gradients to flow through the cell state without being repeatedly multiplied, allowing it to learn longer-range dependencies."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: What are <|sos|> and <|eos|>? Why do we remove the last token with [:-1]?",
+    "input": "",
+    "output": "<|sos|> is the \"start of sequence\" special token -- it tells the model a new sequence is beginning. <|eos|> is the \"end of sequence\" special token -- it signals the end of the text. We remove the last token with [:-1] because the prompt string includes <|eos|> at the end, but we don't want to feed the end token to the model when we're trying to start generating -- we want the model to continue the sequence from \"Thou,\" not to think the sequence is already over."
+  },
+  {
+    "instruction": "In the context of recurrent neural networks: What are the main limitations of RNNs that led researchers to develop the attention mechanism?",
+    "input": "",
+    "output": "(1) The hidden state bottleneck: all information must be compressed into a single fixed-size vector, causing information loss for long sequences. (2) Sequential processing: RNNs process tokens one at a time, making them slow and impossible to parallelize on GPUs. (3) Vanishing gradients make it hard to learn long-range dependencies. Attention solves all three by allowing each token to directly attend to every other token in parallel."
+  },
+  {
+    "instruction": "In the context of self-attention: What is self-attention? In one sentence, explain the core idea.",
+    "input": "",
+    "output": "Self-attention is a mechanism that allows each token in a sequence to compute a weighted combination of all other tokens, determining how much \"attention\" to pay to each other token based on their relevance to each other."
+  },
+  {
+    "instruction": "In the context of self-attention: Using the \"dictionary lookup\" analogy:",
+    "input": "",
+    "output": "The Query is what you're looking for, the Key is the label on each entry, and the Value is the content you retrieve."
+  },
+  {
+    "instruction": "In the context of self-attention: What does each entry in the QK^T attention score matrix represent?",
+    "input": "",
+    "output": "Each entry (i, j) represents how relevant token j is to token i -- it's the dot product similarity between token i's query vector and token j's key vector. A higher score means token j is more relevant to token i and should have more influence on token i's output."
+  },
+  {
+    "instruction": "In the context of self-attention: Why do we divide by sqrt(d_k) before applying softmax?",
+    "input": "",
+    "output": "As the key dimension d_k gets larger, the dot products can become very large in magnitude. When large values are passed to softmax, it produces outputs very close to 0 and 1 (essentially one-hot), which leads to vanishing gradients and the model can't learn effectively. Dividing by sqrt(d_k) scales the dot products back to a reasonable range where softmax produces a more balanced distribution."
+  },
+  {
+    "instruction": "In the context of self-attention: Why do we apply softmax to each row of the attention score matrix?",
+    "input": "",
+    "output": "Softmax normalizes the raw dot product scores into a valid probability distribution (all positive, sum to 1) for each token. Without softmax, the raw dot products could be any real number, and they wouldn't sum to 1. We need proper weights (that sum to 1) for computing the weighted average of value vectors. Without normalization, the scale of the output would be unpredictable."
+  },
+  {
+    "instruction": "In the context of self-attention: What are \"context vectors\"? How do they differ from the original token embeddings?",
+    "input": "",
+    "output": "Context vectors are the output of the attention mechanism -- each one is a weighted sum of all the value vectors, where the weights come from the attention scores. Unlike the original token embeddings (which represent each token in isolation), context vectors incorporate information from other tokens in the sequence. A context vector for \"it\" would contain information about \"animal\" if the attention scores determined that \"animal\" is relevant."
+  },
+  {
+    "instruction": "In the context of self-attention: Why is the residual connection (embeddings + context_vectors) important?",
+    "input": "",
+    "output": "The residual connection ensures that the original token information is preserved even after the attention operation. Without it, the original embeddings could be lost or distorted by the attention mechanism. It also helps with gradient flow during training -- gradients can flow directly through the addition, preventing vanishing gradients in deep networks."
+  },
+  {
+    "instruction": "In the context of self-attention: Why does self-attention allow each token to \"attend to\" every other token simultaneously? Why is this an advantage over RNNs?",
+    "input": "",
+    "output": "In self-attention, every token's query is compared to every token's key in a single matrix multiplication (QK^T), so all pairwise relationships are computed at once. This is an advantage over RNNs because: (1) information doesn't need to travel step-by-step through hidden states -- token 1 can directly attend to token 500, and (2) it can be parallelized on GPUs since all computations happen simultaneously rather than sequentially."
+  },
+  {
+    "instruction": "In the context of self-attention: Given \"The animal didn't cross the street because it was too tired,\" which word(s) should \"it\" attend to most strongly? Why?",
+    "input": "",
+    "output": "\"it\" should attend most strongly to \"animal\" because \"it\" refers to the animal (the animal was too tired, which is why it didn't cross the street). This is called coreference resolution -- determining what a pronoun refers to. The attention mechanism should assign high weight between \"it\" and \"animal\" because they refer to the same entity."
+  },
+  {
+    "instruction": "In the context of self-attention: Explain why parallel processing makes Transformers much faster to train.",
+    "input": "",
+    "output": "Because all tokens attend to all other tokens simultaneously through matrix multiplication (which GPUs are optimized for), the entire sequence can be processed in one step rather than one token at a time like in RNNs, dramatically reducing training time."
+  },
+  {
+    "instruction": "In the context of multi-head attention: What is multi-head attention? How does it differ from single-head self-attention?",
+    "input": "",
+    "output": "Multi-head attention runs multiple self-attention operations (heads) in parallel, each with its own learned Q, K, V weight matrices. Each head operates on a smaller dimension of the embedding. The outputs from all heads are concatenated and projected back to the full dimension. This differs from single-head attention, which runs one attention computation using the full embedding dimension."
+  },
+  {
+    "instruction": "In the context of multi-head attention: If D = 768 and we use 12 attention heads, what is the dimension each head works with?",
+    "input": "",
+    "output": "d_head = D / num_heads = 768 / 12 = 64\n\nEach head works with 64-dimensional Q, K, and V vectors."
+  },
+  {
+    "instruction": "In the context of multi-head attention: Why use multiple heads instead of one big attention computation?",
+    "input": "",
+    "output": "Different heads can learn to attend to different types of relationships simultaneously. For example, in \"The animal didn't cross the street because it was too tired\":\n- One head might focus on coreference (connecting \"it\" to \"animal\")\n- Another head might focus on syntactic structure (connecting \"didn't\" to \"cross\")\n- Another might attend to semantic relationships (connecting \"tired\" to \"cross\" as the reason)\nA single head can only compute one set of attention weights, limiting it to one type of relationship at a time."
+  },
+  {
+    "instruction": "In the context of multi-head attention: After all heads compute their outputs:",
+    "input": "",
+    "output": "a.) The dimension of the concatenated vector is 64 * 12 = 768 (each head's 64-dim output concatenated across 12 heads).\nb.) The W_o projection matrix (768 x 768) mixes information from all the different heads together, allowing the model to combine the different types of relationships each head captured into a single unified representation."
+  },
+  {
+    "instruction": "In the context of multi-head attention: What is the shape of Q, K, and V for each head?",
+    "input": "",
+    "output": "Q = embeddings @ W_Q, where embeddings has shape (T, 768) and W_Q has shape (768, 64).\nSo Q has shape (T, 64). Similarly K and V each have shape (T, 64).\n\nEach head's Q, K, V are all (T, 64) -- T tokens, each represented as a 64-dimensional vector."
+  },
+  {
+    "instruction": "In the context of multi-head attention: Explain what it means for different attention heads to \"specialize.\"",
+    "input": "",
+    "output": "Specialization means that through training, different heads learn to focus on different linguistic patterns or relationships. Examples:\n(1) A \"positional\" head might primarily attend to nearby tokens (local context, like adjective-noun pairs).\n(2) A \"coreference\" head might attend to tokens that refer to the same entity across long distances (like connecting pronouns to their antecedents)."
+  },
+  {
+    "instruction": "In the context of multi-head attention: What is this technique called, and why is it critical for deep networks?",
+    "input": "",
+    "output": "This is called a residual connection (or skip connection). It is critical for deep networks because it provides a direct path for the gradient to flow backward during training. Without residual connections, gradients would need to pass through many layers of attention and feed-forward operations, potentially vanishing or exploding. The skip connection ensures the gradient can always flow through the addition, making deep networks (like 96-layer GPT-3) trainable."
+  },
+  {
+    "instruction": "In the context of multi-head attention: Explain why the title \"Attention Is All You Need\" captures the key insight.",
+    "input": "",
+    "output": "The title captures the insight that the attention mechanism alone is sufficient to build a powerful sequence model -- you don't need recurrence (RNNs) or convolutions (CNNs). By replacing recurrence entirely with self-attention, the Transformer achieves better performance while being much more parallelizable and efficient to train."
+  },
+  {
+    "instruction": "In the context of Transformer blocks: List the components of a single Transformer block in order:",
+    "input": "",
+    "output": "(1) Multi-Head Attention\n(2) Add + Layer Normalization\n(3) Feed-Forward Network (FFN)\n(4) Add + Layer Normalization"
+  },
+  {
+    "instruction": "In the context of Transformer blocks: What is a \"residual connection\"? Write the mathematical expression.",
+    "input": "",
+    "output": "A residual connection adds the input of a layer directly to its output, bypassing the layer.\noutput = x + f(x)\n(where x is the input and f(x) is the layer's transformation)"
+  },
+  {
+    "instruction": "In the context of Transformer blocks: Why are residual connections critical for training deep networks?",
+    "input": "",
+    "output": "Without residual connections, gradients must pass through every layer during backpropagation. In a 96-layer network like GPT-3, gradients would shrink exponentially (vanishing gradient problem), making it impossible for early layers to learn. Residual connections provide a \"shortcut\" for gradients to flow directly through the addition operation, maintaining gradient magnitude throughout the entire depth of the network."
+  },
+  {
+    "instruction": "In the context of Transformer blocks: What is Layer Normalization? Why is it used in Transformers?",
+    "input": "",
+    "output": "Layer normalization normalizes the values across the features (dimensions) of each token's vector to have zero mean and unit variance. It stabilizes training by preventing the values from growing too large or too small as they pass through multiple layers. This helps the model train faster and more reliably, especially in deep networks."
+  },
+  {
+    "instruction": "In the context of Transformer blocks: What is the feed-forward network (FFN) inside a Transformer block? What is the typical hidden size?",
+    "input": "",
+    "output": "The FFN is a two-layer neural network (with an activation function like GELU in between) applied independently to each token's representation. If the model dimension is 768, the typical hidden size is 4 * 768 = 3072. The FFN expands the representation to this larger dimension, applies the activation, then projects it back to 768."
+  },
+  {
+    "instruction": "In the context of Transformer blocks: What does \"stacking\" mean, and why does depth help?",
+    "input": "",
+    "output": "Stacking means placing multiple Transformer blocks in sequence, where the output of one block becomes the input to the next. Depth helps because each block can build upon the representations learned by previous blocks. Early blocks might learn basic patterns (local syntax, word relationships), while later blocks learn more complex, abstract patterns (long-range dependencies, semantic meaning, reasoning)."
+  },
+  {
+    "instruction": "In the context of Transformer blocks: Explain the progression as a story.",
+    "input": "",
+    "output": "Linear layers can transform inputs but can only learn linear relationships, which is too simple for complex data. Adding activation functions (FFNs) introduced non-linearity, allowing the model to learn complex patterns, but each input was still processed independently with no sense of order. RNNs added sequential memory through hidden states, enabling processing of sequences, but the fixed-size hidden state bottleneck and sequential processing limited them. Self-attention solved this by letting every token directly attend to every other token in parallel, capturing long-range dependencies without a bottleneck. Transformer blocks combined attention with FFNs, residual connections, and layer normalization into a powerful, stackable building block for deep networks."
+  },
+  {
+    "instruction": "In the context of Transformer blocks: What is the difference between \"pre-norm\" and \"post-norm\"?",
+    "input": "",
+    "output": "In post-norm, layer normalization is applied after the residual connection: output = LayerNorm(x + f(x)).\nIn pre-norm, layer normalization is applied before the layer: output = x + f(LayerNorm(x)).\nPre-norm tends to be more stable for training very deep networks because the residual path is completely unmodified, allowing cleaner gradient flow. GPT-2 uses pre-norm."
+  },
+  {
+    "instruction": "In the context of building GPT-2: Describe the overall architecture of GPT-2 from input to output.",
+    "input": "",
+    "output": "Tokens go in -> token embeddings + positional embeddings -> stack of Transformer blocks (x12) -> LM head (linear layer) -> next token probabilities come out."
+  },
+  {
+    "instruction": "In the context of building GPT-2: What are \"token embeddings\" and \"positional embeddings\"? Why does GPT-2 need both? How are they combined?",
+    "input": "",
+    "output": "Token embeddings convert each token ID into a dense vector that captures the token's meaning. Positional embeddings encode the position of each token in the sequence (position 0, 1, 2, ...). GPT-2 needs both because self-attention has no inherent sense of order -- without positional embeddings, \"the cat sat\" and \"sat cat the\" would look the same. They are combined by addition: input = token_embedding + positional_embedding."
+  },
+  {
+    "instruction": "In the context of building GPT-2: What is \"causal masking\"? Why does GPT-2 need it?",
+    "input": "",
+    "output": "Causal masking prevents each token from attending to future tokens in the sequence. During training, the model sees the entire sequence at once, but to properly learn next-token prediction, each position should only use information from previous positions. Without causal masking, the model could \"cheat\" by looking ahead at the answer it's supposed to predict. The mask sets attention scores to negative infinity for all future positions before applying softmax."
+  },
+  {
+    "instruction": "In the context of building GPT-2: Explain how GPT-2 generates text autoregressively from the prompt \"The cat.\"",
+    "input": "",
+    "output": "(1) Tokenize \"The cat\" into token IDs. (2) Feed the token IDs through the model (embeddings + 12 Transformer blocks + LM head). (3) The model outputs a probability distribution over the entire vocabulary for the next token. (4) Select a token from this distribution (e.g., \"sat\" with highest probability). (5) Append \"sat\" to the sequence, making it \"The cat sat.\" (6) Feed the full updated sequence back through the model. (7) The model predicts the next token after \"sat.\" (8) Repeat until reaching a stopping condition."
+  },
+  {
+    "instruction": "In the context of building GPT-2: What is the difference between GPT-2 Small, Medium, Large, and XL? What changes?",
+    "input": "",
+    "output": "The number of layers, attention heads, and embedding dimension increase:\n- Small: 12 layers, 12 heads, d=768 (~117M parameters)\n- Medium: 24 layers, 16 heads, d=1024 (~345M parameters)\n- Large: 36 layers, 20 heads, d=1280 (~774M parameters)\n- XL: 48 layers, 25 heads, d=1600 (~1.5B parameters)\nThe vocabulary size (50,257) and max sequence length (1024) stay the same."
+  },
+  {
+    "instruction": "In the context of building GPT-2: What is the \"LM head\"? What does it do?",
+    "input": "",
+    "output": "The LM head (language model head) is a linear layer that maps the output of the last Transformer block (dimension 768) to the vocabulary size (50,257). It produces a logit score for every token in the vocabulary, which are then passed through softmax to get the probability of each token being the next token."
+  },
+  {
+    "instruction": "In the context of building GPT-2: What does each line do?",
+    "input": "",
+    "output": "Line 1: tok = GPT2Tokenizer(vocab_path, merges_path) -- Creates a tokenizer using the vocabulary file and BPE merge rules file.\nLine 2: model = IrishChat() -- Creates an instance of the model (the GPT-2 architecture).\nLine 3: model.load_converted_gpt2_checkpoint(ckpt_path) -- Loads pre-trained GPT-2 weights from a checkpoint file into the model."
+  },
+  {
+    "instruction": "In the context of building GPT-2: Why does GPT-2 have a maximum sequence length of 1024 tokens? What determines this limit?",
+    "input": "",
+    "output": "The maximum sequence length is determined by the positional embedding table. GPT-2 has a learned positional embedding matrix of size 1024 x 768 -- one embedding vector for each possible position from 0 to 1023. Since there are only 1024 positional embeddings, the model can't process sequences longer than 1024 tokens. The attention computation also scales quadratically with sequence length, so longer sequences would be much more expensive."
+  },
+  {
+    "instruction": "In the context of training LLMs: List the three main steps in each iteration of a training loop.",
+    "input": "",
+    "output": "(1) Forward pass: Run input through the model to get predictions.\n(2) Compute loss: Compare predictions to the true targets using the loss function.\n(3) Backward pass: Compute gradients via backpropagation and update the weights."
+  },
+  {
+    "instruction": "In the context of training LLMs: Explain what each line inside the inner loop does. Why do we call zero_grad()?",
+    "input": "",
+    "output": "logits = model(x_batch) -- Forward pass: feeds the input batch through the model to get predicted logits.\nloss = F.cross_entropy(...) -- Computes the cross-entropy loss between the predicted logits and the true target tokens. The .view(-1, ...) reshapes the tensors to be flat for the loss function.\nloss.backward() -- Backward pass: computes the gradient of the loss with respect to every parameter in the model.\noptimizer.step() -- Updates all the model's weights using the computed gradients (e.g., W -= lr * dW).\noptimizer.zero_grad() -- Resets all gradients to zero. This is necessary because PyTorch accumulates gradients by default -- without zeroing, gradients from the previous batch would be added to the current batch's gradients, giving incorrect updates."
+  },
+  {
+    "instruction": "In the context of training LLMs: What is \"perplexity\"? If a model has lower perplexity, is it better or worse? Why?",
+    "input": "",
+    "output": "Perplexity is e^(cross-entropy loss) -- it measures how \"surprised\" or \"confused\" the model is by the text. Lower perplexity means the model is better, because it means the model assigns higher probability to the correct tokens (less surprised). A perplexity of 1 would mean the model perfectly predicts every next token. A high perplexity means the model is uncertain and often wrong."
+  },
+  {
+    "instruction": "In the context of training LLMs: What is the difference between \"training loss\" and \"validation loss\"? Why do we track both?",
+    "input": "",
+    "output": "Training loss measures how well the model fits the data it's actively learning from. Validation loss measures how well the model performs on unseen data it has never trained on. We track both to detect overfitting: if training loss keeps decreasing but validation loss starts increasing, the model is memorizing the training data rather than learning generalizable patterns."
+  },
+  {
+    "instruction": "In the context of training LLMs: What is the Adam optimizer? How does it differ from basic SGD?",
+    "input": "",
+    "output": "Adam (Adaptive Moment Estimation) is an optimizer that maintains running averages of both the gradient (first moment) and the squared gradient (second moment) for each parameter. Unlike basic SGD which uses the same learning rate for all parameters, Adam adapts the learning rate for each parameter individually. Parameters with large gradients get smaller effective learning rates, and parameters with small gradients get larger effective learning rates. This makes training faster and more stable."
+  },
+  {
+    "instruction": "In the context of training LLMs: What is a \"learning rate schedule\"? Why is it important?",
+    "input": "",
+    "output": "A learning rate schedule changes the learning rate during training. Warmup means starting with a very small learning rate and gradually increasing it at the beginning of training, which prevents large unstable updates when the model is randomly initialized. Decay means gradually decreasing the learning rate later in training, allowing the model to make finer adjustments as it approaches a good solution. This combination helps large models train more stably and converge to better solutions."
+  },
+  {
+    "instruction": "In the context of training LLMs: What does it mean to \"scale\" an LLM? What are the three main things you can increase?",
+    "input": "",
+    "output": "Scaling an LLM means making it bigger and more powerful. The three main things you can increase are:\n(1) Model size: more layers, larger embedding dimensions, more attention heads (more parameters).\n(2) Data: training on more text data.\n(3) Compute: using more GPUs and training for longer.\nResearch (scaling laws) has shown that increasing all three together leads to predictable improvements in model performance."
+  },
+  {
+    "instruction": "In the context of training LLMs: What is the difference between \"pre-training\" and \"fine-tuning\"? Why is this two-stage approach common?",
+    "input": "",
+    "output": "Pre-training: Training the model on a massive general text corpus (e.g., the internet) to learn general language understanding. This is very expensive.\nFine-tuning: Taking the pre-trained model and training it further on a smaller, task-specific dataset (e.g., medical text, conversation data, coding). This is much cheaper.\nThis two-stage approach is common because pre-training gives the model general language knowledge that transfers to many tasks, and fine-tuning adapts it to specific needs without starting from scratch each time."
+  }
+]

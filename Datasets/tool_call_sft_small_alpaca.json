@@ -1,0 +1,502 @@
+[
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Use weather tool to check today's temperature.",
+    "output": "<tool_call>{\"name\": \"unknown_tool\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"unknown_tool\", \"result\": {\"error\": \"unknown tool: unknown_tool\"}}</tool_result>\nI do not have that tool. I can use only get_time or calculator."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Explain what a transformer is in one sentence.",
+    "output": "A transformer is a neural architecture that models token relationships using attention instead of recurrence."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 18/(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 9*(8-5)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"9*(8-5)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 27}}</tool_result>\nThe result is 27."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Tell me the time now.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 14:40:00\"}}</tool_result>\nThe current local time is 2026-03-01 14:40:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 9*(8-5)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"9*(8-5)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 27}}</tool_result>\nThe result is 27."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Tell me the time now.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 12:07:00\"}}</tool_result>\nThe current local time is 2026-03-01 12:07:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Calculate 9*(8-5).",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"9*(8-5)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 27}}</tool_result>\nThe result is 27."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "What does JSON stand for?",
+    "output": "JSON stands for JavaScript Object Notation."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute 100/4",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"100/4\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 25.0}}</tool_result>\nThe result is 25.0."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Explain what a transformer is in one sentence.",
+    "output": "A transformer is a neural architecture that models token relationships using attention instead of recurrence."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Use calculator for 2**10.",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"2**10\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"error\": \"expression contains invalid characters\"}}</tool_result>\nI could not run that because the expression format is not allowed."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Call web_search for bitcoin price.",
+    "output": "<tool_call>{\"name\": \"unknown_tool\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"unknown_tool\", \"result\": {\"error\": \"unknown tool: unknown_tool\"}}</tool_result>\nI do not have that tool. I can use only get_time or calculator."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 10:25:00\"}}</tool_result>\nThe current local time is 2026-03-01 10:25:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 144/12+3?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"144/12+3\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 15.0}}</tool_result>\nThe result is 15.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is the time right now?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 11:16:00\"}}</tool_result>\nThe current local time is 2026-03-01 11:16:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please use unknown_tool with no args.",
+    "output": "<tool_call>{\"name\": \"unknown_tool\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"unknown_tool\", \"result\": {\"error\": \"unknown tool: unknown_tool\"}}</tool_result>\nI do not have that tool. I can use only get_time or calculator."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 50-(9*3)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"50-(9*3)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 23}}</tool_result>\nThe result is 23."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 7+13*2?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"7+13*2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 33}}</tool_result>\nThe result is 33."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Current time please.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 09:34:00\"}}</tool_result>\nThe current local time is 2026-03-01 09:34:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Use calculator on: rm -rf /",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"rm -rf /\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"error\": \"expression contains invalid characters\"}}</tool_result>\nThat input is invalid for calculator. Please provide a plain math expression."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Could you check the time for me?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 16:22:00\"}}</tool_result>\nThe current local time is 2026-03-01 16:22:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 12:58:00\"}}</tool_result>\nThe current local time is 2026-03-01 12:58:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 144/12+3?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"144/12+3\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 15.0}}</tool_result>\nThe result is 15.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Could you check the time for me?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 16:39:00\"}}</tool_result>\nThe current local time is 2026-03-01 16:39:00."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "What is 2+2 without tools?",
+    "output": "2+2 is 4."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please use unknown_tool with no args.",
+    "output": "<tool_call>{\"name\": \"unknown_tool\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"unknown_tool\", \"result\": {\"error\": \"unknown tool: unknown_tool\"}}</tool_result>\nI do not have that tool. I can use only get_time or calculator."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Current time please.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 13:15:00\"}}</tool_result>\nThe current local time is 2026-03-01 13:15:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "What is 2+2 without tools?",
+    "output": "2+2 is 4."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 2+2?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"2+2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 4}}</tool_result>\nThe result is 4."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 15:48:00\"}}</tool_result>\nThe current local time is 2026-03-01 15:48:00."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Hi!",
+    "output": "Hi! How can I help?"
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 7+13*2?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"7+13*2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 33}}</tool_result>\nThe result is 33."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Explain what a transformer is in one sentence.",
+    "output": "A transformer is a neural architecture that models token relationships using attention instead of recurrence."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 18/(2+1)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Hi!",
+    "output": "Hi! How can I help?"
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve (5+5)*(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"(5+5)*(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 30}}</tool_result>\nThe result is 30."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 7+13*2",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"7+13*2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 33}}</tool_result>\nThe result is 33."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Tell me the time now.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 11:33:00\"}}</tool_result>\nThe current local time is 2026-03-01 11:33:00."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "What is 2+2 without tools?",
+    "output": "2+2 is 4."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 50-(9*3)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"50-(9*3)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 23}}</tool_result>\nThe result is 23."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 100/4?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"100/4\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 25.0}}</tool_result>\nThe result is 25.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Current time please.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 14:57:00\"}}</tool_result>\nThe current local time is 2026-03-01 14:57:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 10:59:00\"}}</tool_result>\nThe current local time is 2026-03-01 10:59:00."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Tell me the time now.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 16:56:00\"}}</tool_result>\nThe current local time is 2026-03-01 16:56:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 12:41:00\"}}</tool_result>\nThe current local time is 2026-03-01 12:41:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 10:08:00\"}}</tool_result>\nThe current local time is 2026-03-01 10:08:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you tell me the current local time?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 12:24:00\"}}</tool_result>\nThe current local time is 2026-03-01 12:24:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Could you check the time for me?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 09:51:00\"}}</tool_result>\nThe current local time is 2026-03-01 09:51:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute 18/(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute 3.5*2",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"3.5*2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 7.0}}</tool_result>\nThe result is 7.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 18/(2+1)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 7+13*2",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"7+13*2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 33}}</tool_result>\nThe result is 33."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Hi!",
+    "output": "Hi! How can I help?"
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you tell me the current local time?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 16:05:00\"}}</tool_result>\nThe current local time is 2026-03-01 16:05:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 18/(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 9*(8-5)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"9*(8-5)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 27}}</tool_result>\nThe result is 27."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 100/4",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"100/4\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 25.0}}</tool_result>\nThe result is 25.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Tell me the time now.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 10:42:00\"}}</tool_result>\nThe current local time is 2026-03-01 10:42:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Current time please.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 13:32:00\"}}</tool_result>\nThe current local time is 2026-03-01 13:32:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute 9*(8-5)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"9*(8-5)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 27}}</tool_result>\nThe result is 27."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 18/(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 7+13*2?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"7+13*2\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 33}}</tool_result>\nThe result is 33."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Call web_search for bitcoin price.",
+    "output": "<tool_call>{\"name\": \"unknown_tool\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"unknown_tool\", \"result\": {\"error\": \"unknown tool: unknown_tool\"}}</tool_result>\nI do not have that tool. I can use only get_time or calculator."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you tell me the current local time?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 14:06:00\"}}</tool_result>\nThe current local time is 2026-03-01 14:06:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is the time right now?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 09:00:00\"}}</tool_result>\nThe current local time is 2026-03-01 09:00:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Calculate 50-(9*3).",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"50-(9*3)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 23}}</tool_result>\nThe result is 23."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Tell me the time now.",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 15:31:00\"}}</tool_result>\nThe current local time is 2026-03-01 15:31:00."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Explain what a transformer is in one sentence.",
+    "output": "A transformer is a neural architecture that models token relationships using attention instead of recurrence."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute (5+5)*(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"(5+5)*(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 30}}</tool_result>\nThe result is 30."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you tell me the current local time?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 09:17:00\"}}</tool_result>\nThe current local time is 2026-03-01 09:17:00."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Explain what a transformer is in one sentence.",
+    "output": "A transformer is a neural architecture that models token relationships using attention instead of recurrence."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 15:14:00\"}}</tool_result>\nThe current local time is 2026-03-01 15:14:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 11:50:00\"}}</tool_result>\nThe current local time is 2026-03-01 11:50:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 14:23:00\"}}</tool_result>\nThe current local time is 2026-03-01 14:23:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 17:13:00\"}}</tool_result>\nThe current local time is 2026-03-01 17:13:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute (5+5)*(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"(5+5)*(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 30}}</tool_result>\nThe result is 30."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Hi!",
+    "output": "Hi! How can I help?"
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve 50-(9*3)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"50-(9*3)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 23}}</tool_result>\nThe result is 23."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Please solve (5+5)*(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"(5+5)*(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 30}}</tool_result>\nThe result is 30."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Use weather tool to check today's temperature.",
+    "output": "<tool_call>{\"name\": \"unknown_tool\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"unknown_tool\", \"result\": {\"error\": \"unknown tool: unknown_tool\"}}</tool_result>\nI do not have that tool. I can use only get_time or calculator."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Use calculator for 2**10.",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"2**10\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"error\": \"expression contains invalid characters\"}}</tool_result>\nI could not run that because the expression format is not allowed."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Use calculator on: rm -rf /",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"rm -rf /\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"error\": \"expression contains invalid characters\"}}</tool_result>\nThat input is invalid for calculator. Please provide a plain math expression."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What is 12*(3+4)?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"12*(3+4)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 84}}</tool_result>\nThe result is 84."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "What time is it?",
+    "output": "<tool_call>{\"name\": \"get_time\", \"args\": {}}</tool_call>\n<tool_result>{\"name\": \"get_time\", \"result\": {\"time\": \"2026-03-01 13:49:00\"}}</tool_result>\nThe current local time is 2026-03-01 13:49:00."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Can you evaluate 100/4?",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"100/4\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 25.0}}</tool_result>\nThe result is 25.0."
+  },
+  {
+    "instruction": "Respond directly to the user. If no tool is needed, do not emit a tool call.",
+    "input": "Give me a short pep talk.",
+    "output": "You are making steady progress, and small consistent steps win over time."
+  },
+  {
+    "instruction": "Use tools when needed. First emit exactly one <tool_call> JSON block, then use tool_result to answer.",
+    "input": "Compute 18/(2+1)",
+    "output": "<tool_call>{\"name\": \"calculator\", \"args\": {\"expression\": \"18/(2+1)\"}}</tool_call>\n<tool_result>{\"name\": \"calculator\", \"result\": {\"result\": 6.0}}</tool_result>\nThe result is 6.0."
+  }
+]

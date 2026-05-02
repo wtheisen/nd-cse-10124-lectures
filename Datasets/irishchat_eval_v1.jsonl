@@ -1,0 +1,10 @@
+{"id":"time_001","prompt":"what time is it right now?","expected_tool":"get_time","expected_result_substring":"current local time"}
+{"id":"time_002","prompt":"can you tell me the current time","expected_tool":"get_time","expected_result_substring":"current local time"}
+{"id":"calc_001","prompt":"what is 12*(3+4)?","expected_tool":"calculator","expected_result_substring":"84"}
+{"id":"calc_002","prompt":"calculate 18/3 + 7","expected_tool":"calculator","expected_result_substring":"13"}
+{"id":"calc_003","prompt":"compute (2+5)*(9-4)","expected_tool":"calculator","expected_result_substring":"35"}
+{"id":"chat_001","prompt":"explain what a transformer block does in plain English","expected_tool":null,"expected_result_substring":null}
+{"id":"chat_002","prompt":"give me two quick study tips for machine learning","expected_tool":null,"expected_result_substring":null}
+{"id":"chat_003","prompt":"write a short friendly greeting for students","expected_tool":null,"expected_result_substring":null}
+{"id":"tool_forbidden_001","prompt":"what does attention mean in transformers?","expected_tool":null,"expected_result_substring":null}
+{"id":"tool_required_robust_001","prompt":"what is   9 + 11 * 2","expected_tool":"calculator","expected_result_substring":"31"}
