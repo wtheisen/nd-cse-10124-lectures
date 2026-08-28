@@ -21,6 +21,7 @@ function cacheElements() {
     "run-badge",
     "run-description",
     "run-generator",
+    "run-generator-control",
     "selection-count",
     "slide-grid",
     "view-run"
@@ -164,28 +165,50 @@ async function copySelected() {
   setTimeout(updateSelectionUi, 1600);
 }
 
-function setRunUi(run) {
+function setRunUi(run, connected = true) {
   const badge = elements["run-badge"];
+  const workflowControl = elements["run-generator-control"];
   badge.className = "status-badge idle";
+  workflowControl.className = "icon-button workflow-status-button idle";
+  workflowControl.disabled = !connected;
+  elements["run-generator"].disabled = !connected;
   elements["view-run"].hidden = true;
+  if (!connected) {
+    workflowControl.classList.replace("idle", "disconnected");
+    workflowControl.title = "Connect GitHub to regenerate images";
+    workflowControl.setAttribute("aria-label", workflowControl.title);
+  }
   if (!run) {
     badge.textContent = "Idle";
     elements["run-description"].textContent = "Ready to regenerate the published slide images.";
+    if (connected) {
+      workflowControl.title = "Regenerate slide images";
+      workflowControl.setAttribute("aria-label", workflowControl.title);
+    }
     return;
   }
   if (run.status !== "completed") {
     badge.className = "status-badge running";
     badge.textContent = run.status || "Running";
     elements["run-description"].textContent = "Generation is running. You can close this popup; Chrome will notify you.";
+    workflowControl.classList.replace("idle", "running");
+    workflowControl.disabled = true;
+    elements["run-generator"].disabled = true;
+    workflowControl.title = "Slide image generation is running";
   } else if (run.conclusion === "success") {
     badge.className = "status-badge success";
     badge.textContent = "Ready";
     elements["run-description"].textContent = "The latest slide images were published successfully.";
+    workflowControl.classList.replace("idle", "success");
+    workflowControl.title = "Images ready — click to regenerate again";
   } else {
     badge.className = "status-badge failure";
     badge.textContent = "Failed";
     elements["run-description"].textContent = "Generation failed. Open the workflow run for details.";
+    workflowControl.classList.replace("idle", "failure");
+    workflowControl.title = "Last run failed — click to try again";
   }
+  workflowControl.setAttribute("aria-label", workflowControl.title);
   if (run.htmlUrl) {
     elements["view-run"].href = run.htmlUrl;
     elements["view-run"].hidden = false;
@@ -214,9 +237,9 @@ async function refreshGithubUi() {
   }
   if (auth.connected) {
     const run = await runtimeMessage("GET_WORKFLOW_RUN");
-    setRunUi(run);
+    setRunUi(run, true);
   } else {
-    setRunUi(null);
+    setRunUi(null, false);
     elements["run-description"].textContent = "Connect GitHub to regenerate and publish slide images.";
   }
 }
@@ -245,10 +268,12 @@ async function handleGithubStatusClick() {
 async function dispatchGenerator() {
   elements["run-generator"].disabled = true;
   elements["run-generator"].textContent = "Starting…";
+  elements["run-generator-control"].disabled = true;
+  elements["run-generator-control"].title = "Starting slide image generation";
+  elements["run-generator-control"].setAttribute("aria-label", elements["run-generator-control"].title);
   const run = await runtimeMessage("DISPATCH_WORKFLOW");
-  setRunUi(run);
+  setRunUi(run, true);
   elements["run-generator"].textContent = "Regenerate images";
-  elements["run-generator"].disabled = false;
 }
 
 function installListeners() {
@@ -266,6 +291,11 @@ function installListeners() {
   elements["refresh-manifest"].addEventListener("click", () => loadManifest().catch((error) => showNotice(error.message, true)));
   elements["connect-github"].addEventListener("click", () => connectGithub().catch((error) => showNotice(error.message, true)));
   elements["github-status-control"].addEventListener("click", () => handleGithubStatusClick().catch((error) => showNotice(error.message, true)));
+  elements["run-generator-control"].addEventListener("click", () => dispatchGenerator().catch((error) => {
+    elements["run-generator"].textContent = "Regenerate images";
+    showNotice(error.message, true);
+    refreshGithubUi().catch(() => {});
+  }));
   elements["disconnect-github"].addEventListener("click", async () => {
     await runtimeMessage("DISCONNECT_GITHUB");
     await refreshGithubUi();

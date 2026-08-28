@@ -75,13 +75,15 @@ main { padding: 15px 16px 18px; }
   font-size: 22px;
 }
 
-.github-status-button svg {
+.github-status-button svg,
+.workflow-status-button svg {
   width: 19px;
   height: 19px;
   fill: currentColor;
 }
 
-.connection-dot {
+.connection-dot,
+.workflow-dot {
   position: absolute;
   right: 4px;
   bottom: 4px;
@@ -90,6 +92,30 @@ main { padding: 15px 16px 18px; }
   border: 1.5px solid #173d69;
   border-radius: 999px;
   background: #9aa4b2;
+}
+
+.workflow-status-button.idle .workflow-dot {
+  background: #9dc4ed;
+}
+
+.workflow-status-button.running .workflow-dot {
+  background: #f2c94c;
+  box-shadow: 0 0 0 3px rgb(242 201 76 / 18%);
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+
+.workflow-status-button.success .workflow-dot {
+  background: #48d597;
+  box-shadow: 0 0 0 3px rgb(72 213 151 / 18%);
+}
+
+.workflow-status-button.failure .workflow-dot {
+  background: #ff766d;
+  box-shadow: 0 0 0 3px rgb(255 118 109 / 18%);
+}
+
+@keyframes status-pulse {
+  50% { opacity: .35; }
 }
 
 .github-status-button.pending .connection-dot {
