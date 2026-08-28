@@ -171,8 +171,7 @@ async function copySelected() {
     SLIDE_PICKER_CONFIG.imageBaseUrl
   );
   await navigator.clipboard.writeText(text);
-  elements["copy-selected"].textContent = `Copied ${slides.length} slide${slides.length === 1 ? "" : "s"}!`;
-  setTimeout(updateSelectionUi, 1600);
+  window.close();
 }
 
 function setRunUi(run, connected = true) {
