@@ -3,8 +3,9 @@ name: Render lecture images
 on:
   workflow_dispatch:
   schedule:
-    # Runs after the morning Filled Slides Apps Script in both EST and EDT.
-    - cron: "30 15 * * 1-5"
+    # Runs just before the M/W/F lecture and follows Indianapolis DST changes.
+    - cron: "25 11 * * 1,3,5"
+      timezone: "America/Indiana/Indianapolis"
   push:
     paths:
       - "Slides/**/*.gslides"
