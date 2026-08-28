@@ -164,13 +164,36 @@ function setGenerationUi(isRunning) {
   updateSelectionUi();
 }
 
+function copyTextSynchronously(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  try {
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    return document.execCommand("copy");
+  } catch (_error) {
+    return false;
+  } finally {
+    textarea.remove();
+  }
+}
+
 async function copySelected() {
   const slides = SlidePickerCore.orderedSlides(currentSlides(), state.selectedIds);
   const text = SlidePickerCore.buildClipboardText(
     slides,
     SLIDE_PICKER_CONFIG.imageBaseUrl
   );
-  await navigator.clipboard.writeText(text);
+  if (!copyTextSynchronously(text)) {
+    await navigator.clipboard.writeText(text);
+  }
+  elements["copy-selected"].textContent = "Copied!";
+  await new Promise((resolve) => setTimeout(resolve, 250));
   window.close();
 }
 
