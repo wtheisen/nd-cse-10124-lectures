@@ -55,15 +55,51 @@ h2 { font-size: 15px; }
 
 main { padding: 15px 16px 18px; }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .icon-button {
+  position: relative;
+  display: grid;
   width: 34px;
   height: 34px;
+  padding: 0;
+  place-items: center;
   border: 1px solid rgb(255 255 255 / 35%);
   border-radius: 9px;
   color: #fff;
   background: rgb(255 255 255 / 9%);
   cursor: pointer;
   font-size: 22px;
+}
+
+.github-status-button svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+
+.connection-dot {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid #173d69;
+  border-radius: 999px;
+  background: #9aa4b2;
+}
+
+.github-status-button.pending .connection-dot {
+  background: #f2c94c;
+  box-shadow: 0 0 0 3px rgb(242 201 76 / 18%);
+}
+
+.github-status-button.connected .connection-dot {
+  background: #48d597;
+  box-shadow: 0 0 0 3px rgb(72 213 151 / 18%);
 }
 
 .field-row, .selection-bar, .panel-heading, .button-row {

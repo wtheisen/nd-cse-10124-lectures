@@ -14,6 +14,7 @@ function cacheElements() {
     "copy-selected",
     "deck-select",
     "disconnect-github",
+    "github-status-control",
     "inference-status",
     "notice",
     "refresh-manifest",
@@ -193,6 +194,16 @@ function setRunUi(run) {
 
 async function refreshGithubUi() {
   const auth = await runtimeMessage("AUTH_STATE");
+  const githubControl = elements["github-status-control"];
+  githubControl.classList.remove("disconnected", "pending", "connected");
+  const connectionState = auth.connected ? "connected" : auth.pending ? "pending" : "disconnected";
+  githubControl.classList.add(connectionState);
+  githubControl.title = auth.connected
+    ? "GitHub connected"
+    : auth.pending
+      ? `Waiting for GitHub code ${auth.pending.userCode}`
+      : "Connect GitHub";
+  githubControl.setAttribute("aria-label", githubControl.title);
   elements["connect-github"].hidden = auth.connected;
   elements["disconnect-github"].hidden = !auth.connected;
   elements["run-generator"].disabled = !auth.connected;
@@ -215,6 +226,20 @@ async function connectGithub() {
   await navigator.clipboard.writeText(pending.userCode);
   showNotice(`GitHub code ${pending.userCode} was copied. Paste it into the page that just opened.`);
   await chrome.tabs.create({ url: pending.verificationUri });
+}
+
+async function handleGithubStatusClick() {
+  const auth = await runtimeMessage("AUTH_STATE");
+  if (auth.connected) {
+    showNotice("GitHub is connected and ready.");
+    return;
+  }
+  if (auth.pending) {
+    showNotice(`Waiting for GitHub code ${auth.pending.userCode}.`);
+    return;
+  }
+  await connectGithub();
+  await refreshGithubUi();
 }
 
 async function dispatchGenerator() {
@@ -240,6 +265,7 @@ function installListeners() {
   elements["copy-selected"].addEventListener("click", () => copySelected().catch((error) => showNotice(error.message, true)));
   elements["refresh-manifest"].addEventListener("click", () => loadManifest().catch((error) => showNotice(error.message, true)));
   elements["connect-github"].addEventListener("click", () => connectGithub().catch((error) => showNotice(error.message, true)));
+  elements["github-status-control"].addEventListener("click", () => handleGithubStatusClick().catch((error) => showNotice(error.message, true)));
   elements["disconnect-github"].addEventListener("click", async () => {
     await runtimeMessage("DISCONNECT_GITHUB");
     await refreshGithubUi();
