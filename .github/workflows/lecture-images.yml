@@ -45,14 +45,20 @@ jobs:
             --output "${RUNNER_TEMP}/filled-slides"
 
       - name: Render lecture images
+        env:
+          SLIDE_MANIFEST_URL: ${{ vars.SLIDE_MANIFEST_URL }}
         run: |
+          test -n "${SLIDE_MANIFEST_URL}"
           python3 scripts/render_lecture_images.py \
-            --filled-dir "${RUNNER_TEMP}/filled-slides"
+            --filled-dir "${RUNNER_TEMP}/filled-slides" \
+            --slide-manifest-url "${SLIDE_MANIFEST_URL}"
 
       - name: Validate rendered site
         run: |
           test -f Lecture_Images/manifest.json
           test "$(find Lecture_Images -name 'slide-*.png' -type f | wc -l)" -gt 0
+          test "$(find Lecture_Images -path '*/by-id/*.png' -type f | wc -l)" \
+            -eq "$(find Lecture_Images -name 'slide-*.png' -type f | wc -l)"
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

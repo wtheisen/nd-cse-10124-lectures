@@ -1,0 +1,408 @@
+{
+  "version": 1,
+  "course": "CSE 10124",
+  "generatedAt": "fixture",
+  "decks": {
+    "Lecture01": {
+      "deck": "Lecture01",
+      "presentationId": "1WgC0m3582s6u6eXIhoLmxnJrzZtYzljIFEJgNqtXrqA",
+      "presentationName": "Lecture_01_Syllabus",
+      "slides": [
+        {
+          "position": 1,
+          "id": "p1",
+          "title": ""
+        },
+        {
+          "position": 2,
+          "id": "p2",
+          "title": ""
+        },
+        {
+          "position": 3,
+          "id": "p3",
+          "title": ""
+        },
+        {
+          "position": 4,
+          "id": "p4",
+          "title": ""
+        },
+        {
+          "position": 5,
+          "id": "p5",
+          "title": ""
+        },
+        {
+          "position": 6,
+          "id": "p6",
+          "title": ""
+        },
+        {
+          "position": 7,
+          "id": "p7",
+          "title": ""
+        },
+        {
+          "position": 8,
+          "id": "p9",
+          "title": ""
+        },
+        {
+          "position": 9,
+          "id": "p10",
+          "title": ""
+        },
+        {
+          "position": 10,
+          "id": "p11",
+          "title": ""
+        },
+        {
+          "position": 11,
+          "id": "p12",
+          "title": ""
+        },
+        {
+          "position": 12,
+          "id": "p13",
+          "title": ""
+        },
+        {
+          "position": 13,
+          "id": "p15",
+          "title": ""
+        },
+        {
+          "position": 14,
+          "id": "g3f8488f2256_0_11",
+          "title": ""
+        },
+        {
+          "position": 15,
+          "id": "p16",
+          "title": ""
+        },
+        {
+          "position": 16,
+          "id": "p17",
+          "title": ""
+        },
+        {
+          "position": 17,
+          "id": "p19",
+          "title": ""
+        },
+        {
+          "position": 18,
+          "id": "p20",
+          "title": ""
+        },
+        {
+          "position": 19,
+          "id": "p21",
+          "title": ""
+        },
+        {
+          "position": 20,
+          "id": "p22",
+          "title": ""
+        },
+        {
+          "position": 21,
+          "id": "p23",
+          "title": ""
+        },
+        {
+          "position": 22,
+          "id": "g3f8488f2256_0_2",
+          "title": ""
+        }
+      ]
+    },
+    "Lecture02": {
+      "deck": "Lecture02",
+      "presentationId": "1_oHaYmpPXvm2N5rEcota7TVC1UZXJ7YbeiD_RIHTQVE",
+      "presentationName": "Lecture_02_High_Dimensional_Data",
+      "slides": [
+        {
+          "position": 1,
+          "id": "g3fae25d0c8e_1_0",
+          "title": ""
+        },
+        {
+          "position": 2,
+          "id": "p3",
+          "title": ""
+        },
+        {
+          "position": 3,
+          "id": "g3fae25d0c8e_2_62",
+          "title": ""
+        },
+        {
+          "position": 4,
+          "id": "g3fae25d0c8e_2_68",
+          "title": ""
+        },
+        {
+          "position": 5,
+          "id": "g3fae25d0c8e_0_0",
+          "title": ""
+        },
+        {
+          "position": 6,
+          "id": "g3fae25d0c8e_0_89",
+          "title": ""
+        },
+        {
+          "position": 7,
+          "id": "g3fae25d0c8e_0_71",
+          "title": ""
+        },
+        {
+          "position": 8,
+          "id": "g3fae25d0c8e_0_78",
+          "title": ""
+        },
+        {
+          "position": 9,
+          "id": "g3fae25d0c8e_0_103",
+          "title": ""
+        },
+        {
+          "position": 10,
+          "id": "g3fae25d0c8e_0_33",
+          "title": ""
+        },
+        {
+          "position": 11,
+          "id": "g3fae25d0c8e_0_41",
+          "title": ""
+        },
+        {
+          "position": 12,
+          "id": "g3f8580405e7_0_47",
+          "title": ""
+        },
+        {
+          "position": 13,
+          "id": "g3fae25d0c8e_0_110",
+          "title": ""
+        },
+        {
+          "position": 14,
+          "id": "g3fae25d0c8e_0_58",
+          "title": ""
+        },
+        {
+          "position": 15,
+          "id": "g3f8580405e7_0_10",
+          "title": ""
+        },
+        {
+          "position": 16,
+          "id": "g3fae25d0c8e_0_147",
+          "title": ""
+        },
+        {
+          "position": 17,
+          "id": "g3fae25d0c8e_0_157",
+          "title": ""
+        },
+        {
+          "position": 18,
+          "id": "g3f8580405e7_0_15",
+          "title": ""
+        },
+        {
+          "position": 19,
+          "id": "g3f8580405e7_0_25",
+          "title": ""
+        },
+        {
+          "position": 20,
+          "id": "g3f8580405e7_0_40",
+          "title": ""
+        },
+        {
+          "position": 21,
+          "id": "g3fae25d0c8e_0_118",
+          "title": ""
+        },
+        {
+          "position": 22,
+          "id": "g3fae25d0c8e_0_136",
+          "title": ""
+        },
+        {
+          "position": 23,
+          "id": "g3fae25d0c8e_2_0",
+          "title": ""
+        },
+        {
+          "position": 24,
+          "id": "g3fae25d0c8e_2_8",
+          "title": ""
+        },
+        {
+          "position": 25,
+          "id": "g3fae25d0c8e_2_48",
+          "title": ""
+        },
+        {
+          "position": 26,
+          "id": "g3fae25d0c8e_2_29",
+          "title": ""
+        },
+        {
+          "position": 27,
+          "id": "g3fae25d0c8e_2_19",
+          "title": ""
+        },
+        {
+          "position": 28,
+          "id": "g3fae25d0c8e_2_39",
+          "title": ""
+        },
+        {
+          "position": 29,
+          "id": "g3f8580405e7_0_52",
+          "title": ""
+        }
+      ]
+    },
+    "ProgrammingDay01": {
+      "deck": "ProgrammingDay01",
+      "presentationId": "1LjjDJNxDCRWOxcpmriCR_Q0FAL8S-covG1DtWRMKlzE",
+      "presentationName": "Programming_Day_01_Linear_Transformations",
+      "slides": [
+        {
+          "position": 1,
+          "id": "g3fae25d0c8e_1_0",
+          "title": ""
+        },
+        {
+          "position": 2,
+          "id": "g3faf1019b5e_1_0",
+          "title": ""
+        },
+        {
+          "position": 3,
+          "id": "g3fae9abb5e3_0_395",
+          "title": ""
+        },
+        {
+          "position": 4,
+          "id": "g3fae9abb5e3_0_401",
+          "title": ""
+        },
+        {
+          "position": 5,
+          "id": "p3",
+          "title": ""
+        },
+        {
+          "position": 6,
+          "id": "g3fae25d0c8e_2_62",
+          "title": ""
+        },
+        {
+          "position": 7,
+          "id": "g3fae25d0c8e_2_68",
+          "title": ""
+        },
+        {
+          "position": 8,
+          "id": "g3fae9abb5e3_0_413",
+          "title": ""
+        },
+        {
+          "position": 9,
+          "id": "g3fae9abb5e3_0_0",
+          "title": ""
+        },
+        {
+          "position": 10,
+          "id": "g3fae9abb5e3_0_6",
+          "title": ""
+        },
+        {
+          "position": 11,
+          "id": "g3f8580405e7_0_47",
+          "title": ""
+        },
+        {
+          "position": 12,
+          "id": "g3fae25d0c8e_0_110",
+          "title": ""
+        },
+        {
+          "position": 13,
+          "id": "g3fae9abb5e3_0_97",
+          "title": ""
+        },
+        {
+          "position": 14,
+          "id": "g3fae9abb5e3_0_78",
+          "title": ""
+        },
+        {
+          "position": 15,
+          "id": "g3fae25d0c8e_0_0",
+          "title": ""
+        },
+        {
+          "position": 16,
+          "id": "g3fae25d0c8e_2_0",
+          "title": ""
+        },
+        {
+          "position": 17,
+          "id": "g3fae9abb5e3_0_297",
+          "title": ""
+        },
+        {
+          "position": 18,
+          "id": "g3fae9abb5e3_0_165",
+          "title": ""
+        },
+        {
+          "position": 19,
+          "id": "g3fae9abb5e3_0_141",
+          "title": ""
+        },
+        {
+          "position": 20,
+          "id": "g3fae9abb5e3_0_408",
+          "title": ""
+        },
+        {
+          "position": 21,
+          "id": "g3fae9abb5e3_0_24",
+          "title": ""
+        },
+        {
+          "position": 22,
+          "id": "g3fae9abb5e3_0_35",
+          "title": ""
+        },
+        {
+          "position": 23,
+          "id": "g3fae25d0c8e_2_39",
+          "title": ""
+        },
+        {
+          "position": 24,
+          "id": "g3fae9abb5e3_0_50",
+          "title": ""
+        },
+        {
+          "position": 25,
+          "id": "g3fae9abb5e3_0_55",
+          "title": ""
+        }
+      ]
+    }
+  }
+}
