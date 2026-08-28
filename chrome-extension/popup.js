@@ -2,7 +2,8 @@ const state = {
   manifest: null,
   deckKey: null,
   selectedIds: [],
-  activeTabTitle: ""
+  activeTabTitle: "",
+  workflowRunning: false
 };
 
 const elements = {};
@@ -15,6 +16,7 @@ function cacheElements() {
     "deck-select",
     "disconnect-github",
     "github-status-control",
+    "generation-message",
     "inference-status",
     "notice",
     "refresh-manifest",
@@ -147,11 +149,19 @@ function updateSelectionUi() {
   elements["selection-count"].textContent = count
     ? `${count} slide${count === 1 ? "" : "s"} selected`
     : "No slides selected";
-  elements["clear-selection"].disabled = count === 0;
-  elements["copy-selected"].disabled = count === 0;
+  elements["clear-selection"].disabled = count === 0 || state.workflowRunning;
+  elements["copy-selected"].disabled = count === 0 || state.workflowRunning;
   elements["copy-selected"].textContent = count
     ? `Copy ${count} slide${count === 1 ? "" : "s"} for Colab`
     : "Select slides to copy";
+}
+
+function setGenerationUi(isRunning) {
+  state.workflowRunning = isRunning;
+  elements["generation-message"].hidden = !isRunning;
+  elements["slide-grid"].hidden = isRunning;
+  elements["deck-select"].disabled = isRunning;
+  updateSelectionUi();
 }
 
 async function copySelected() {
@@ -173,6 +183,7 @@ function setRunUi(run, connected = true) {
   workflowControl.disabled = !connected;
   elements["run-generator"].disabled = !connected;
   elements["view-run"].hidden = true;
+  setGenerationUi(Boolean(run && run.status !== "completed"));
   if (!connected) {
     workflowControl.classList.replace("idle", "disconnected");
     workflowControl.title = "Connect GitHub to regenerate images";
