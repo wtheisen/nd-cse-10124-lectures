@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSE 10124 Slide Picker</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">CSE 10124</p>
+        <h1>Slide Picker</h1>
+      </div>
+      <button id="refresh-manifest" class="icon-button" type="button" title="Refresh slides" aria-label="Refresh slides">↻</button>
+    </header>
+
+    <main>
+      <section class="deck-controls" aria-labelledby="deck-label">
+        <div class="field-row">
+          <label id="deck-label" for="deck-select">Deck</label>
+          <span id="inference-status" class="muted"></span>
+        </div>
+        <select id="deck-select"></select>
+      </section>
+
+      <section id="notice" class="notice" hidden></section>
+
+      <section class="selection-bar">
+        <div>
+          <strong id="selection-count">No slides selected</strong>
+          <span class="muted">Click thumbnails in paste order.</span>
+        </div>
+        <button id="clear-selection" class="text-button" type="button" disabled>Clear</button>
+      </section>
+
+      <section id="slide-grid" class="slide-grid" aria-live="polite"></section>
+
+      <section class="copy-panel">
+        <button id="copy-selected" class="primary-button" type="button" disabled>
+          Select slides to copy
+        </button>
+        <p class="microcopy">Horizontal rules are inserted between selected slides.</p>
+      </section>
+
+      <section class="generator-panel" aria-labelledby="generator-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">GitHub Actions</p>
+            <h2 id="generator-heading">Image generator</h2>
+          </div>
+          <span id="run-badge" class="status-badge idle">Idle</span>
+        </div>
+        <p id="run-description" class="muted">Connect GitHub to regenerate and publish slide images.</p>
+        <div class="button-row">
+          <button id="connect-github" class="secondary-button" type="button">Connect GitHub</button>
+          <button id="run-generator" class="secondary-button" type="button" disabled>Regenerate images</button>
+          <button id="disconnect-github" class="text-button" type="button" hidden>Disconnect</button>
+        </div>
+        <a id="view-run" class="run-link" href="#" target="_blank" hidden>View workflow run ↗</a>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="core.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

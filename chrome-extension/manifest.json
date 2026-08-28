@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "CSE 10124 Slide Picker",
+  "version": "0.1.0",
+  "description": "Copy stable lecture-slide embeds into Colab and regenerate slide images.",
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "clipboardWrite",
+    "notifications",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://williamtheisen.com/*",
+    "https://api.github.com/*",
+    "https://github.com/login/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "CSE 10124 Slide Picker",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
