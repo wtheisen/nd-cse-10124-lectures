@@ -1,19 +1,26 @@
 name: Render lecture images
 
 on:
+  workflow_dispatch:
+  schedule:
+    # Runs after the morning Filled Slides Apps Script in both EST and EDT.
+    - cron: "30 15 * * 1-5"
   push:
     paths:
-      - "Blank/**/*.pptx"
-      - "Filled/**/*.pdf"
+      - "Slides/**/*.gslides"
       - "scripts/render_lecture_images.py"
+      - "scripts/html_img_generator.py"
       - ".github/workflows/lecture-images.yml"
+
+concurrency:
+  group: lecture-images-pages
+  cancel-in-progress: true
 
 jobs:
   render:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pages: write
       id-token: write
     environment:
@@ -22,27 +29,37 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install dependencies
+      - name: Install render dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libreoffice poppler-utils
+          sudo apt-get install -y poppler-utils
+          python3 -m pip install --disable-pip-version-check gdown==6.1.0
+
+      - name: Download filled slides
+        run: |
+          mkdir -p "${RUNNER_TEMP}/filled-slides"
+          python3 -m gdown --folder \
+            "https://drive.google.com/drive/folders/1OmhQw15XUHrIFzpqWUNaBGixsEY9681u" \
+            --output "${RUNNER_TEMP}/filled-slides"
 
       - name: Render lecture images
-        run: python3 scripts/render_lecture_images.py
+        run: |
+          python3 scripts/render_lecture_images.py \
+            --filled-dir "${RUNNER_TEMP}/filled-slides"
+
+      - name: Validate rendered site
+        run: |
+          test -f Lecture_Images/manifest.json
+          test "$(find Lecture_Images -name 'slide-*.png' -type f | wc -l)" -gt 0
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
       - name: Prepare Pages artifact
         run: |
-          rm -rf site
           mkdir -p site/Lecture_Images
-          if [ -d Lecture_Images ]; then
-            cp -R Lecture_Images/. site/Lecture_Images/
-          fi
+          cp -R Lecture_Images/. site/Lecture_Images/
           touch site/.nojekyll
 
       - name: Upload Pages artifact
