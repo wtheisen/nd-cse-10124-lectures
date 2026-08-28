@@ -323,6 +323,15 @@ def main() -> int:
     filled_paths = list(args.filled_dir.rglob("*.pdf")) if args.filled_dir else []
     filled_decks = index_decks(filled_paths, "filled PDF")
     filled_slide_maps = index_filled_slide_maps(args.filled_dir)
+    missing_filled_maps = sorted(set(filled_decks) - set(filled_slide_maps))
+    if missing_filled_maps:
+        missing_names = ", ".join(
+            f"{deck_id.output_name}.slide-map.json" for deck_id in missing_filled_maps
+        )
+        raise RuntimeError(
+            "Every filled PDF requires the frozen slide-ID map created with it. "
+            f"Missing: {missing_names}. Re-upload the filled slides before rerunning."
+        )
     all_decks = sorted(set(slide_decks) | set(filled_decks))
 
     if not all_decks:
@@ -351,17 +360,15 @@ def main() -> int:
             live_map = live_slide_maps.get(deck_id)
             frozen_map = filled_slide_maps.get(deck_id)
 
-            if filled_pdf and frozen_map:
+            if filled_pdf:
+                # Missing maps are rejected before rendering so a filled PDF can
+                # never be paired with IDs from a later version of the live deck.
+                assert frozen_map is not None
                 slide_map = frozen_map
                 map_type = "filled_snapshot"
             elif live_map:
                 slide_map = live_map
                 map_type = "live_google_slides"
-                if filled_pdf:
-                    print(
-                        f"{deck_id.output_name}: no frozen slide map yet; "
-                        "using the current Google Slides order"
-                    )
             else:
                 raise RuntimeError(
                     f"{deck_id.output_name}: no stable slide-ID map is available."
