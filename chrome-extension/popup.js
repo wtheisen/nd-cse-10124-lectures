@@ -3,10 +3,12 @@ const state = {
   deckKey: null,
   selectedIds: [],
   activeTabTitle: "",
-  workflowRunning: false
+  workflowRunning: false,
+  scrollPositions: {}
 };
 
 const elements = {};
+let scrollSaveTimer = null;
 
 function cacheElements() {
   [
@@ -156,12 +158,50 @@ function updateSelectionUi() {
     : "Select slides to copy";
 }
 
+function currentScrollTop() {
+  return Math.max(
+    document.scrollingElement ? document.scrollingElement.scrollTop : 0,
+    document.documentElement.scrollTop,
+    document.body.scrollTop
+  );
+}
+
+function saveScrollPosition() {
+  if (!state.deckKey || state.workflowRunning) return Promise.resolve();
+  if (scrollSaveTimer) clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = null;
+  const deckKey = state.deckKey;
+  state.scrollPositions = {
+    ...state.scrollPositions,
+    [deckKey]: Math.round(currentScrollTop())
+  };
+  return chrome.storage.local.set({ popupScrollPositions: state.scrollPositions });
+}
+
+function scheduleScrollSave() {
+  if (state.workflowRunning) return;
+  if (scrollSaveTimer) clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = setTimeout(() => saveScrollPosition().catch(() => {}), 100);
+}
+
+function restoreScrollPosition() {
+  if (!state.deckKey || state.workflowRunning) return;
+  const scrollTop = Number(state.scrollPositions[state.deckKey]) || 0;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    window.scrollTo(0, scrollTop);
+    document.documentElement.scrollTop = scrollTop;
+    document.body.scrollTop = scrollTop;
+  }));
+}
+
 function setGenerationUi(isRunning) {
+  const wasRunning = state.workflowRunning;
   state.workflowRunning = isRunning;
   elements["generation-message"].hidden = !isRunning;
   elements["slide-grid"].hidden = isRunning;
   elements["deck-select"].disabled = isRunning;
   updateSelectionUi();
+  if (wasRunning && !isRunning) restoreScrollPosition();
 }
 
 function copyTextSynchronously(text) {
@@ -299,6 +339,7 @@ async function handleGithubStatusClick() {
 }
 
 async function dispatchGenerator() {
+  await saveScrollPosition();
   elements["run-generator"].disabled = true;
   elements["run-generator"].textContent = "Starting…";
   elements["run-generator-control"].disabled = true;
@@ -311,10 +352,12 @@ async function dispatchGenerator() {
 
 function installListeners() {
   elements["deck-select"].addEventListener("change", (event) => {
+    saveScrollPosition().catch(() => {});
     state.deckKey = event.target.value;
     state.selectedIds = [];
     elements["inference-status"].textContent = "Selected manually";
     renderSlides();
+    restoreScrollPosition();
   });
   elements["clear-selection"].addEventListener("click", () => {
     state.selectedIds = [];
@@ -338,14 +381,19 @@ function installListeners() {
     showNotice(error.message, true);
     refreshGithubUi().catch(() => {});
   }));
+  document.addEventListener("scroll", scheduleScrollSave, { capture: true, passive: true });
+  window.addEventListener("pagehide", () => { saveScrollPosition().catch(() => {}); });
 }
 
 async function initialize() {
   cacheElements();
   installListeners();
+  const stored = await chrome.storage.local.get("popupScrollPositions");
+  state.scrollPositions = stored.popupScrollPositions || {};
   const tab = await getActiveTab();
   state.activeTabTitle = tab.title || "";
   await Promise.all([loadManifest(), refreshGithubUi()]);
+  restoreScrollPosition();
   setInterval(() => refreshGithubUi().catch(() => {}), 5000);
 }
 
