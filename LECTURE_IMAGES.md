@@ -24,9 +24,8 @@ not store Google credentials in GitHub.
 
 ## Automation
 
-`.github/workflows/lecture-images.yml` runs at 11:25 AM Indianapolis time on
-Monday, Wednesday, and Friday. It can also be started manually from GitHub
-Actions. It:
+`.github/workflows/lecture-images.yml` runs daily at 11:25 AM Indianapolis time.
+It can also be started manually from GitHub Actions. It:
 
 1. Downloads the current contents of the filled-slides folder.
 2. Exports any deck without a filled PDF directly from Google Slides as PDF.

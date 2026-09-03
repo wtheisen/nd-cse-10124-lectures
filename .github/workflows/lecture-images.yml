@@ -3,8 +3,8 @@ name: Render lecture images
 on:
   workflow_dispatch:
   schedule:
-    # Runs just before the M/W/F lecture and follows Indianapolis DST changes.
-    - cron: "25 11 * * 1,3,5"
+    # Runs every morning and follows Indianapolis DST changes.
+    - cron: "25 11 * * *"
       timezone: "America/Indiana/Indianapolis"
   push:
     paths:
