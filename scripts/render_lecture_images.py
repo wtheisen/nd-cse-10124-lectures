@@ -332,11 +332,6 @@ def main() -> int:
             "Every filled PDF requires the frozen slide-ID map created with it. "
             f"Missing: {missing_names}. Re-upload the filled slides before rerunning."
         )
-    all_decks = sorted(set(slide_decks) | set(filled_decks))
-
-    if not all_decks:
-        raise RuntimeError("No renderable Google Slides pointers or filled PDFs were found.")
-
     manifest: dict[str, object] = {
         "version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -350,13 +345,17 @@ def main() -> int:
             curl,
             temp_root,
         )
+        all_decks = sorted(set(slide_decks) | set(filled_decks) | set(live_slide_maps))
+        if not all_decks:
+            raise RuntimeError(
+                "No renderable Google Slides presentations or filled PDFs were found."
+            )
         staged_output = temp_root / "Lecture_Images"
         staged_output.mkdir()
 
         for deck_id in all_decks:
             filled_pdf = filled_decks.get(deck_id)
             pointer = slide_decks.get(deck_id)
-            presentation_id = read_presentation_id(pointer) if pointer else None
             live_map = live_slide_maps.get(deck_id)
             frozen_map = filled_slide_maps.get(deck_id)
 
@@ -374,7 +373,11 @@ def main() -> int:
                     f"{deck_id.output_name}: no stable slide-ID map is available."
                 )
 
-            if presentation_id and slide_map.presentation_id != presentation_id:
+            presentation_id = (
+                read_presentation_id(pointer) if pointer else slide_map.presentation_id
+            )
+
+            if pointer and slide_map.presentation_id != presentation_id:
                 raise RuntimeError(
                     f"{deck_id.output_name}: slide map presentation ID does not match {pointer.name}."
                 )
@@ -383,14 +386,16 @@ def main() -> int:
                 source_pdf = filled_pdf
                 source_type = "filled_pdf"
                 source_name = filled_pdf.name
-            elif pointer:
+            else:
                 source_pdf = temp_root / f"{deck_id.output_name}.pdf"
-                print(f"{deck_id.output_name}: exporting {pointer.name}")
+                source_name = (
+                    pointer.name
+                    if pointer
+                    else f"{deck_id.output_name} (Drive discovery)"
+                )
+                print(f"{deck_id.output_name}: exporting {source_name}")
                 export_google_slides_pdf(str(presentation_id), source_pdf, curl)
                 source_type = "google_slides"
-                source_name = pointer.name
-            else:
-                raise AssertionError(f"No source for {deck_id.output_name}")
 
             page_count = pdf_page_count(source_pdf, pdfinfo)
             if len(slide_map.slides) != page_count:

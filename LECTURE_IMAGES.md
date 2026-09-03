@@ -28,10 +28,11 @@ not store Google credentials in GitHub.
 It can also be started manually from GitHub Actions. It:
 
 1. Downloads the current contents of the filled-slides folder.
-2. Exports any deck without a filled PDF directly from Google Slides as PDF.
-3. Renders every PDF page to a numbered PNG.
-4. Pairs pages with native slide IDs and creates stable `by-id/` aliases.
-5. Verifies page counts and deploys the result to GitHub Pages.
+2. Discovers source decks from the configured Google Drive Slides folder.
+3. Exports any deck without a filled PDF directly from Google Slides as PDF.
+4. Renders every PDF page to a numbered PNG.
+5. Pairs pages with native slide IDs and creates stable `by-id/` aliases.
+6. Verifies page counts and deploys the result to GitHub Pages.
 
 If any download or render fails, the workflow stops before deployment, leaving
 the previous Pages site intact.
