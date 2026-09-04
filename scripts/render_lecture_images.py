@@ -23,6 +23,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
+NOTABILITY_RENDER_VERSION = 2
 
 
 @dataclass(frozen=True, order=True)
@@ -335,15 +336,42 @@ def capture_google_slides_editor_images(
         page.locator(f'[id="editor-{slide.object_id}"]').wait_for(
             state="visible", timeout=120_000
         )
-        # The editor element becoming visible confirms the slide switch. A short
-        # settling interval lets Google finish the final canvas paint without
-        # paying the former 750 ms penalty after every full-page reload.
-        page.wait_for_timeout(350)
-
         destination = out_dir / f"slide-{slide.position:03d}.png"
-        canvas.screenshot(path=str(destination), type="png", animations="disabled")
+        capture_stable_canvas(page, canvas, destination)
         images.append(destination)
     return images
+
+
+def capture_stable_canvas(
+    page: object,
+    canvas: object,
+    destination: Path,
+    poll_ms: int = 250,
+    stable_samples: int = 2,
+    max_wait_ms: int = 3_000,
+) -> None:
+    """Capture only after Google Slides finishes asynchronous formula layout."""
+    previous_digest: Optional[bytes] = None
+    matching_samples = 0
+    latest_png: Optional[bytes] = None
+    elapsed_ms = 0
+
+    while elapsed_ms < max_wait_ms:
+        page.wait_for_timeout(poll_ms)
+        elapsed_ms += poll_ms
+        latest_png = canvas.screenshot(type="png", animations="disabled")
+        digest = hashlib.sha256(latest_png).digest()
+        if digest == previous_digest:
+            matching_samples += 1
+            if matching_samples >= stable_samples:
+                break
+        else:
+            previous_digest = digest
+            matching_samples = 0
+
+    if latest_png is None:
+        raise RuntimeError("Google Slides canvas could not be captured.")
+    destination.write_bytes(latest_png)
 
 
 def matching_previous_notability_entry(
@@ -363,6 +391,8 @@ def matching_previous_notability_entry(
     if entry.get("presentation_id") != live_map.presentation_id:
         return None
     if entry.get("presentation_last_updated") != live_map.presentation_last_updated:
+        return None
+    if entry.get("notability_render_version") != NOTABILITY_RENDER_VERSION:
         return None
 
     previous_ids = entry.get("notability_source_slide_ids")
@@ -385,6 +415,7 @@ def matching_previous_notability_entry(
         "notability_md5",
         "notability_size_bytes",
         "notability_slide_count",
+        "notability_render_version",
     )
     if any(not entry.get(field) for field in required):
         return None
@@ -418,12 +449,16 @@ def reuse_previous_notability_pdf(
             raise RuntimeError(f"Previous Notability export is not a PDF: {destination.name}")
     if pdf_page_count(destination, pdfinfo) != expected_slides:
         raise RuntimeError(f"Previous Notability PDF has the wrong page count: {destination.name}")
-    return {field: entry[field] for field in (
-        "notability_pdf",
-        "notability_md5",
-        "notability_size_bytes",
-        "notability_slide_count",
-    )}
+    return {
+        field: entry[field]
+        for field in (
+            "notability_pdf",
+            "notability_md5",
+            "notability_size_bytes",
+            "notability_slide_count",
+            "notability_render_version",
+        )
+    }
 
 
 def create_raster_pdf(images: list[Path], destination: Path) -> None:
@@ -645,6 +680,7 @@ def main() -> int:
                         "notability_md5": file_md5(pdf_path),
                         "notability_size_bytes": pdf_path.stat().st_size,
                         "notability_slide_count": len(captures),
+                        "notability_render_version": NOTABILITY_RENDER_VERSION,
                         "notability_source_slide_ids": [
                             slide.object_id for slide in live_map.slides
                         ],
