@@ -23,7 +23,8 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 2
+NOTABILITY_RENDER_VERSION = 3
+APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
 @dataclass(frozen=True, order=True)
@@ -321,6 +322,7 @@ def capture_google_slides_editor_images(
         f"#slide=id.{first_slide_id}"
     )
     page.goto(first_url, wait_until="domcontentloaded", timeout=120_000)
+    install_export_font_shims(page)
     canvas = page.locator("#canvas")
     canvas.wait_for(state="visible", timeout=120_000)
     page.evaluate("() => document.fonts.ready")
@@ -337,41 +339,38 @@ def capture_google_slides_editor_images(
             state="visible", timeout=120_000
         )
         destination = out_dir / f"slide-{slide.position:03d}.png"
-        capture_stable_canvas(page, canvas, destination)
+        # Slides finishes swapping slides before the editor node becomes visible,
+        # but give its formula images one short paint cycle before capture.
+        page.wait_for_timeout(350)
+        canvas.screenshot(path=str(destination), animations="disabled")
         images.append(destination)
     return images
 
 
-def capture_stable_canvas(
-    page: object,
-    canvas: object,
-    destination: Path,
-    poll_ms: int = 250,
-    stable_samples: int = 2,
-    max_wait_ms: int = 3_000,
-) -> None:
-    """Capture only after Google Slides finishes asynchronous formula layout."""
-    previous_digest: Optional[bytes] = None
-    matching_samples = 0
-    latest_png: Optional[bytes] = None
-    elapsed_ms = 0
+def install_export_font_shims(page: object) -> None:
+    """Match the macOS fallback metrics used by the live Slides editor.
 
-    while elapsed_ms < max_wait_ms:
-        page.wait_for_timeout(poll_ms)
-        elapsed_ms += poll_ms
-        latest_png = canvas.screenshot(type="png", animations="disabled")
-        digest = hashlib.sha256(latest_png).digest()
-        if digest == previous_digest:
-            matching_samples += 1
-            if matching_samples >= stable_samples:
-                break
-        else:
-            previous_digest = digest
-            matching_samples = 0
-
-    if latest_png is None:
-        raise RuntimeError("Google Slides canvas could not be captured.")
-    destination.write_bytes(latest_png)
+    Arial does not contain U+2375 (APL functional symbol omega). macOS falls
+    back to Arial Unicode MS, while Ubuntu picks a wider glyph and wraps it in
+    narrow formula boxes. This tiny OFL-licensed, renamed Noto Sans Math subset
+    supplies only U+2375 with the same 600-unit advance as Arial Unicode MS.
+    """
+    try:
+        encoded_font = APL_FONT_PATH.read_text(encoding="ascii").strip()
+    except OSError as error:
+        raise RuntimeError(f"Cannot load export font shim: {APL_FONT_PATH}") from error
+    page.add_style_tag(
+        content=(
+            "@font-face {"
+            "font-family: Arial;"
+            f"src: url(data:font/ttf;base64,{encoded_font}) format('truetype');"
+            "font-style: normal; font-weight: 400; font-display: block;"
+            "unicode-range: U+2375;"
+            "}"
+        )
+    )
+    page.evaluate("() => document.fonts.load('67px Arial', '\u2375')")
+    page.evaluate("() => document.fonts.ready")
 
 
 def matching_previous_notability_entry(

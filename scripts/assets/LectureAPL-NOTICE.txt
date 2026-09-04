@@ -1,0 +1,13 @@
+Lecture APL font shim
+
+This is a subset of Noto Sans Math containing only U+2375. Its primary font
+name was changed to "Lecture APL" and its advance width was adjusted to match
+the macOS Arial Unicode fallback used by the Google Slides editor.
+
+Copyright 2010, 2012-2020 Google Inc.; 2015-2020 Google LLC.
+Licensed under the SIL Open Font License, Version 1.1.
+Source: https://github.com/notofonts/noto-fonts
+
+The full license is available at:
+https://openfontlicense.org/open-font-license-official-text/
+
