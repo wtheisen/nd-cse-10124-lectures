@@ -23,7 +23,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 5
+NOTABILITY_RENDER_VERSION = 6
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -338,11 +338,17 @@ def capture_google_slides_editor_images(
         page.locator(f'[id="editor-{slide.object_id}"]').wait_for(
             state="visible", timeout=120_000
         )
-        apply_export_font_shims(page)
+        # The editor node becomes visible before Slides inserts all of its SVG
+        # text, so let the slide paint before repairing font-dependent layout.
+        page.wait_for_timeout(1_000)
+        repaired_gradients = apply_export_font_shims(page, slide.object_id)
+        if repaired_gradients:
+            print(
+                f"{slide_map.deck_id.output_name} slide {slide.position}: "
+                f"repaired {repaired_gradients} gradient symbol(s)"
+            )
         destination = out_dir / f"slide-{slide.position:03d}.png"
-        # Slides finishes swapping slides before the editor node becomes visible,
-        # but give its formula images one short paint cycle before capture.
-        page.wait_for_timeout(350)
+        page.wait_for_timeout(50)
         canvas.screenshot(path=str(destination), animations="disabled")
         images.append(destination)
     return images
@@ -374,13 +380,20 @@ def install_export_font_shims(page: object) -> None:
     page.evaluate("() => document.fonts.ready")
 
 
-def apply_export_font_shims(page: object) -> None:
+def apply_export_font_shims(page: object, slide_object_id: str) -> int:
     """Apply the metric-compatible glyph and undo Slides' stale line wrap."""
-    page.evaluate(
-        """() => {
-            const glyphs = Array.from(document.querySelectorAll('#canvas text'));
-            for (let index = 0; index < glyphs.length; index += 1) {
-                const omega = glyphs[index];
+    repaired = page.evaluate(
+        """slideObjectId => {
+            const slideId = `editor-${slideObjectId}`;
+            const glyphs = Array.from(
+                document.querySelectorAll(`#${CSS.escape(slideId)} text`)
+            );
+            const nablas = glyphs.filter(element =>
+                element.textContent === '\u2207' &&
+                Number.parseFloat(getComputedStyle(element).fontSize) >= 45
+            );
+            let repairs = 0;
+            for (const omega of glyphs) {
                 if (omega.textContent !== '\u2375') continue;
                 omega.style.setProperty(
                     'font-family',
@@ -388,27 +401,41 @@ def apply_export_font_shims(page: object) -> None:
                     'important'
                 );
 
-                const nabla = glyphs[index - 1];
-                if (!nabla || nabla.textContent !== '\u2207') continue;
-                if (
-                    nabla.closest('.sketchy-text-content') !==
-                    omega.closest('.sketchy-text-content')
-                ) continue;
+                if (Number.parseFloat(getComputedStyle(omega).fontSize) < 60) continue;
+                const omegaRect = omega.getBoundingClientRect();
+                const omegaCenter = {
+                    x: omegaRect.x + omegaRect.width / 2,
+                    y: omegaRect.y + omegaRect.height / 2,
+                };
+                const nabla = nablas
+                    .map(element => {
+                        const rect = element.getBoundingClientRect();
+                        const dx = rect.x + rect.width / 2 - omegaCenter.x;
+                        const dy = rect.y + rect.height / 2 - omegaCenter.y;
+                        return {element, distance: dx * dx + dy * dy};
+                    })
+                    .sort((left, right) => left.distance - right.distance)[0];
+                if (!nabla || nabla.distance > 40000) continue;
 
                 // Ubuntu may have already laid these out as separate lines
                 // before the web font is available. Put omega on nabla's
                 // baseline and recompute its horizontal position directly.
-                const nablaX = Number.parseFloat(nabla.getAttribute('x') || '0');
-                const omegaX = nablaX + nabla.getComputedTextLength();
+                const nablaElement = nabla.element;
+                const nablaX = Number.parseFloat(nablaElement.getAttribute('x') || '0');
+                const omegaX = nablaX + nablaElement.getComputedTextLength();
                 omega.setAttribute('x', String(omegaX));
                 omega.removeAttribute('y');
-                if (omega.parentElement !== nabla.parentElement) {
-                    nabla.parentElement.appendChild(omega);
+                if (omega.parentElement !== nablaElement.parentElement) {
+                    nablaElement.parentElement.appendChild(omega);
                 }
+                repairs += 1;
             }
-        }"""
+            return repairs;
+        }""",
+        slide_object_id,
     )
     page.evaluate("() => document.fonts.ready")
+    return int(repaired)
 
 
 def matching_previous_notability_entry(
