@@ -2,6 +2,7 @@
 """Render Google Slides and filled PDFs with stable slide-ID image aliases."""
 
 import argparse
+import hashlib
 from io import BytesIO
 import json
 import re
@@ -380,6 +381,15 @@ def create_raster_pdf(images: list[Path], destination: Path) -> None:
     pdf.save()
 
 
+def file_md5(path: Path) -> str:
+    """Return the content digest Google Drive exposes for binary files."""
+    digest = hashlib.md5(usedforsecurity=False)
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def create_stable_aliases(
     deck_dir: Path,
     numbered_images: list[Path],
@@ -477,7 +487,7 @@ def main() -> int:
         staged_output.mkdir()
 
         editor_captures: dict[DeckId, list[Path]] = {}
-        notability_paths: dict[DeckId, str] = {}
+        notability_exports: dict[DeckId, dict[str, object]] = {}
         if not args.skip_notability_pdfs:
             notability_dir = staged_output / "Notability_PDFs"
             with google_slides_editor_page(args.chromium_executable) as editor_page:
@@ -496,8 +506,14 @@ def main() -> int:
                             f"editor captures, created {len(captures)}"
                         )
                     pdf_name = f"{deck_id.output_name}_Notability.pdf"
-                    create_raster_pdf(captures, notability_dir / pdf_name)
-                    notability_paths[deck_id] = f"Notability_PDFs/{pdf_name}"
+                    pdf_path = notability_dir / pdf_name
+                    create_raster_pdf(captures, pdf_path)
+                    notability_exports[deck_id] = {
+                        "notability_pdf": f"Notability_PDFs/{pdf_name}",
+                        "notability_md5": file_md5(pdf_path),
+                        "notability_size_bytes": pdf_path.stat().st_size,
+                        "notability_slide_count": len(captures),
+                    }
 
         for deck_id in all_decks:
             filled_pdf = filled_decks.get(deck_id)
@@ -605,9 +621,9 @@ def main() -> int:
                 "slide_count": len(numbered_images),
                 "slides": stable_slides,
             }
-            if deck_id in notability_paths:
-                manifest["decks"][deck_id.output_name]["notability_pdf"] = (
-                    notability_paths[deck_id]
+            if deck_id in notability_exports:
+                manifest["decks"][deck_id.output_name].update(
+                    notability_exports[deck_id]
                 )
 
         total_images = len(list(staged_output.glob("*/slide-*.png")))
