@@ -56,7 +56,9 @@ jobs:
           test -n "${SLIDE_MANIFEST_URL}"
           python3 scripts/render_lecture_images.py \
             --filled-dir "${RUNNER_TEMP}/filled-slides" \
-            --slide-manifest-url "${SLIDE_MANIFEST_URL}"
+            --slide-manifest-url "${SLIDE_MANIFEST_URL}" \
+            --previous-output-manifest-url \
+              "https://williamtheisen.com/nd-cse-10124-lectures/Lecture_Images/manifest.json"
 
       - name: Validate rendered site
         run: |

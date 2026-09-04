@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator, Optional
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 
 
 DECK_RE = re.compile(
@@ -46,6 +46,7 @@ class SlideInfo:
 class SlideMap:
     deck_id: DeckId
     presentation_id: str
+    presentation_last_updated: str
     slides: tuple[SlideInfo, ...]
     source: str
 
@@ -180,6 +181,7 @@ def parse_slide_map(
     return SlideMap(
         deck_id=deck_id,
         presentation_id=presentation_id,
+        presentation_last_updated=str(payload.get("lastUpdated", "")).strip(),
         slides=tuple(slides),
         source=source,
     )
@@ -310,26 +312,114 @@ def capture_google_slides_editor_images(
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
 
+    first_slide = slide_map.slides[0]
+    first_slide_id = quote(first_slide.object_id, safe="_-")
+    first_url = (
+        "https://docs.google.com/presentation/d/"
+        f"{slide_map.presentation_id}/edit?usp=sharing&rm=minimal"
+        f"#slide=id.{first_slide_id}"
+    )
+    page.goto(first_url, wait_until="domcontentloaded", timeout=120_000)
+    canvas = page.locator("#canvas")
+    canvas.wait_for(state="visible", timeout=120_000)
+    page.evaluate("() => document.fonts.ready")
+
     images: list[Path] = []
-    for slide in slide_map.slides:
+    for index, slide in enumerate(slide_map.slides):
         slide_id = quote(slide.object_id, safe="_-")
-        url = (
-            "https://docs.google.com/presentation/d/"
-            f"{slide_map.presentation_id}/edit?usp=sharing&rm=minimal"
-            f"#slide=id.{slide_id}"
-        )
-        page.goto(url, wait_until="domcontentloaded", timeout=120_000)
-        canvas = page.locator("#canvas")
-        canvas.wait_for(state="visible", timeout=120_000)
+        if index:
+            page.evaluate(
+                "slideId => { window.location.hash = 'slide=id.' + slideId; }",
+                slide_id,
+            )
         page.locator(f'[id="editor-{slide.object_id}"]').wait_for(
-            state="attached", timeout=120_000
+            state="visible", timeout=120_000
         )
-        page.wait_for_timeout(750)
+        # The editor element becoming visible confirms the slide switch. A short
+        # settling interval lets Google finish the final canvas paint without
+        # paying the former 750 ms penalty after every full-page reload.
+        page.wait_for_timeout(350)
 
         destination = out_dir / f"slide-{slide.position:03d}.png"
         canvas.screenshot(path=str(destination), type="png", animations="disabled")
         images.append(destination)
     return images
+
+
+def matching_previous_notability_entry(
+    deck_id: DeckId,
+    live_map: SlideMap,
+    previous_manifest: object,
+) -> Optional[dict[str, object]]:
+    """Return a reusable export only when its source deck is provably unchanged."""
+    if not live_map.presentation_last_updated or not isinstance(previous_manifest, dict):
+        return None
+    decks = previous_manifest.get("decks")
+    if not isinstance(decks, dict):
+        return None
+    entry = decks.get(deck_id.output_name)
+    if not isinstance(entry, dict):
+        return None
+    if entry.get("presentation_id") != live_map.presentation_id:
+        return None
+    if entry.get("presentation_last_updated") != live_map.presentation_last_updated:
+        return None
+
+    previous_slides = entry.get("slides")
+    if not isinstance(previous_slides, list):
+        return None
+    previous_ids = [
+        str(slide.get("id", ""))
+        for slide in previous_slides
+        if isinstance(slide, dict)
+    ]
+    if previous_ids != [slide.object_id for slide in live_map.slides]:
+        return None
+
+    required = (
+        "notability_pdf",
+        "notability_md5",
+        "notability_size_bytes",
+        "notability_slide_count",
+    )
+    if any(not entry.get(field) for field in required):
+        return None
+    return entry
+
+
+def reuse_previous_notability_pdf(
+    entry: dict[str, object],
+    manifest_url: str,
+    destination: Path,
+    curl: str,
+    pdfinfo: str,
+) -> dict[str, object]:
+    """Download and validate a prior immutable export before reusing it."""
+    relative_path = str(entry["notability_pdf"])
+    download_file(
+        urljoin(manifest_url, relative_path),
+        destination,
+        curl,
+        f"previous Notability PDF {destination.name}",
+    )
+    expected_size = int(entry["notability_size_bytes"])
+    expected_md5 = str(entry["notability_md5"])
+    expected_slides = int(entry["notability_slide_count"])
+    if destination.stat().st_size != expected_size:
+        raise RuntimeError(f"Previous Notability PDF has the wrong size: {destination.name}")
+    if file_md5(destination) != expected_md5:
+        raise RuntimeError(f"Previous Notability PDF has the wrong checksum: {destination.name}")
+    with destination.open("rb") as pdf:
+        if pdf.read(5) != b"%PDF-":
+            raise RuntimeError(f"Previous Notability export is not a PDF: {destination.name}")
+    if pdf_page_count(destination, pdfinfo) != expected_slides:
+        raise RuntimeError(f"Previous Notability PDF has the wrong page count: {destination.name}")
+    return {field: entry[field] for field in (
+        "notability_pdf",
+        "notability_md5",
+        "notability_size_bytes",
+        "notability_slide_count",
+    )}
 
 
 def create_raster_pdf(images: list[Path], destination: Path) -> None:
@@ -431,6 +521,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=repo_root / "Lecture_Images")
     parser.add_argument("--slide-manifest-file", type=Path)
     parser.add_argument("--slide-manifest-url")
+    parser.add_argument("--previous-output-manifest-url")
     parser.add_argument("--dpi", type=int, default=200)
     parser.add_argument("--pdftoppm")
     parser.add_argument("--pdfinfo")
@@ -480,6 +571,16 @@ def main() -> int:
             curl,
             temp_root,
         )
+        previous_manifest: object = {}
+        if args.previous_output_manifest_url:
+            previous_manifest_path = temp_root / "previous-output-manifest.json"
+            download_file(
+                args.previous_output_manifest_url,
+                previous_manifest_path,
+                curl,
+                "previous output manifest",
+            )
+            previous_manifest = read_json(previous_manifest_path)
         all_decks = sorted(set(slide_decks) | set(filled_decks) | set(live_slide_maps))
         if not all_decks:
             raise RuntimeError(
@@ -492,8 +593,24 @@ def main() -> int:
         notability_exports: dict[DeckId, dict[str, object]] = {}
         if not args.skip_notability_pdfs:
             notability_dir = staged_output / "Notability_PDFs"
+            notability_dir.mkdir(parents=True)
             with google_slides_editor_page(args.chromium_executable) as editor_page:
                 for deck_id, live_map in sorted(live_slide_maps.items()):
+                    pdf_name = f"{deck_id.output_name}_Notability.pdf"
+                    pdf_path = notability_dir / pdf_name
+                    previous_entry = matching_previous_notability_entry(
+                        deck_id, live_map, previous_manifest
+                    )
+                    if previous_entry and args.previous_output_manifest_url:
+                        print(f"{deck_id.output_name}: reusing unchanged Notability PDF")
+                        notability_exports[deck_id] = reuse_previous_notability_pdf(
+                            previous_entry,
+                            args.previous_output_manifest_url,
+                            pdf_path,
+                            curl,
+                            pdfinfo,
+                        )
+                        continue
                     print(f"{deck_id.output_name}: capturing editor canvas for Notability")
                     capture_dir = temp_root / "editor-captures" / deck_id.output_name
                     captures = capture_google_slides_editor_images(
@@ -507,8 +624,6 @@ def main() -> int:
                             f"{deck_id.output_name}: expected {len(live_map.slides)} "
                             f"editor captures, created {len(captures)}"
                         )
-                    pdf_name = f"{deck_id.output_name}_Notability.pdf"
-                    pdf_path = notability_dir / pdf_name
                     create_raster_pdf(captures, pdf_path)
                     notability_exports[deck_id] = {
                         "notability_pdf": f"Notability_PDFs/{pdf_name}",
@@ -617,6 +732,9 @@ def main() -> int:
             )
             manifest["decks"][deck_id.output_name] = {
                 "presentation_id": slide_map.presentation_id,
+                "presentation_last_updated": (
+                    live_map.presentation_last_updated if live_map else ""
+                ),
                 "source_type": source_type,
                 "source_name": source_name,
                 "slide_map_type": map_type,
