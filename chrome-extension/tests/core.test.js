@@ -20,10 +20,21 @@ assert.deepStrictEqual(core.orderedSlides(slides, ["b", "a"]).map((slide) => sli
 
 const copied = core.buildClipboardText(
   core.orderedSlides(slides, ["b", "a"]),
-  "https://example.test/images/"
+  "https://example.test/images/",
+  "2026-09-04T14:50:51Z"
 );
 assert.ok(copied.indexOf("/b.png") < copied.indexOf("/a.png"));
 assert.strictEqual((copied.match(/\n\n---\n\n/g) || []).length, 1);
 assert.ok(!copied.endsWith("---"));
+assert.ok(copied.includes("?v=2026-09-04T14%3A50%3A51Z"));
+
+assert.strictEqual(
+  core.versionedAssetUrl("https://example.test/images/", "a.png", "revision 2"),
+  "https://example.test/images/a.png?v=revision%202"
+);
+assert.strictEqual(
+  core.versionedAssetUrl("https://example.test/images/", "a.png", ""),
+  "https://example.test/images/a.png"
+);
 
 console.log("Chrome extension core tests passed.");

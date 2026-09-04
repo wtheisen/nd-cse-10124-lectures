@@ -104,9 +104,10 @@ function updateNotabilityLink() {
     link.removeAttribute("href");
     return;
   }
-  link.href = SlidePickerCore.absoluteImageUrl(
+  link.href = SlidePickerCore.versionedAssetUrl(
     SLIDE_PICKER_CONFIG.imageBaseUrl,
-    deck.notability_pdf
+    deck.notability_pdf,
+    state.manifest.generated_at
   );
   link.hidden = false;
 }
@@ -130,9 +131,10 @@ function renderSlides() {
     card.title = slide.title || `Slide ${slide.position}`;
 
     const image = document.createElement("img");
-    image.src = SlidePickerCore.absoluteImageUrl(
+    image.src = SlidePickerCore.versionedAssetUrl(
       SLIDE_PICKER_CONFIG.imageBaseUrl,
-      slide.image
+      slide.image,
+      state.manifest.generated_at
     );
     image.alt = slide.title || `Slide ${slide.position}`;
     image.loading = "lazy";
@@ -246,7 +248,8 @@ async function copySelected() {
   const slides = SlidePickerCore.orderedSlides(currentSlides(), state.selectedIds);
   const text = SlidePickerCore.buildClipboardText(
     slides,
-    SLIDE_PICKER_CONFIG.imageBaseUrl
+    SLIDE_PICKER_CONFIG.imageBaseUrl,
+    state.manifest.generated_at
   );
   if (!copyTextSynchronously(text)) {
     await navigator.clipboard.writeText(text);

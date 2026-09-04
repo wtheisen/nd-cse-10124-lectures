@@ -20,6 +20,13 @@ const SlidePickerCore = (() => {
     return `${String(baseUrl).replace(/\/$/, "")}/${String(imagePath).replace(/^\//, "")}`;
   }
 
+  function versionedAssetUrl(baseUrl, assetPath, version) {
+    const url = absoluteImageUrl(baseUrl, assetPath);
+    if (!version) return url;
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}v=${encodeURIComponent(String(version))}`;
+  }
+
   function renderEmbed(url) {
     return [
       '<div class="thumbnail">',
@@ -28,9 +35,9 @@ const SlidePickerCore = (() => {
     ].join("\n");
   }
 
-  function buildClipboardText(slides, baseUrl) {
+  function buildClipboardText(slides, baseUrl, version) {
     return slides
-      .map((slide) => renderEmbed(absoluteImageUrl(baseUrl, slide.image)))
+      .map((slide) => renderEmbed(versionedAssetUrl(baseUrl, slide.image, version)))
       .join("\n\n---\n\n");
   }
 
@@ -54,7 +61,8 @@ const SlidePickerCore = (() => {
     inferDeckKey,
     orderedSlides,
     renderEmbed,
-    toggleSelection
+    toggleSelection,
+    versionedAssetUrl
   };
 })();
 

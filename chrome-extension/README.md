@@ -6,6 +6,8 @@ Google Colab.
 - The Colab title is used to infer `LectureNN` or `ProgrammingDayNN`.
 - Clicking thumbnails selects them in click order and shows numbered badges.
 - Copying produces stable `by-id` image embeds with `---` between slides.
+- Published-generation query versions prevent Chrome and Colab from showing a
+  stale cached image after regeneration while retaining stable slide IDs.
 - Each deck offers a high-resolution, image-only PDF for importing into
   Notability without text reflow.
 - GitHub authentication uses a repository-scoped GitHub App device flow.
