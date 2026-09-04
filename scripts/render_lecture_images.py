@@ -610,6 +610,14 @@ def main() -> int:
                             curl,
                             pdfinfo,
                         )
+                        if deck_id not in filled_decks:
+                            # Live-only decks also use the browser-faithful export
+                            # for their website images. Re-rasterizing at the
+                            # original 3300px width avoids the vector PDF fallback.
+                            capture_dir = temp_root / "editor-captures" / deck_id.output_name
+                            editor_captures[deck_id] = render_pdf_to_images(
+                                pdf_path, capture_dir, pdftoppm, 330
+                            )
                         continue
                     print(f"{deck_id.output_name}: capturing editor canvas for Notability")
                     capture_dir = temp_root / "editor-captures" / deck_id.output_name
