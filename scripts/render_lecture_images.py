@@ -7,10 +7,12 @@ import re
 import shutil
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Iterator, Optional
+from urllib.parse import quote
 
 
 DECK_RE = re.compile(
@@ -263,6 +265,108 @@ def render_pdf_to_images(
     return renamed
 
 
+@contextmanager
+def google_slides_editor_page(chromium_executable: Optional[str] = None) -> Iterator[object]:
+    """Launch one headless editor session for pixel-faithful slide captures."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as error:
+        raise RuntimeError(
+            "Playwright is required for Notability-ready PDFs. "
+            "Install it with `python3 -m pip install playwright` and run "
+            "`python3 -m playwright install chromium`."
+        ) from error
+
+    manager = sync_playwright().start()
+    launch_options: dict[str, object] = {"headless": True}
+    if chromium_executable:
+        launch_options["executable_path"] = chromium_executable
+    browser = manager.chromium.launch(**launch_options)
+    context = browser.new_context(
+        viewport={"width": 2200, "height": 1600},
+        device_scale_factor=2,
+    )
+    page = context.new_page()
+    try:
+        yield page
+    finally:
+        context.close()
+        browser.close()
+        manager.stop()
+
+
+def capture_google_slides_editor_images(
+    page: object,
+    slide_map: SlideMap,
+    out_dir: Path,
+) -> list[Path]:
+    """Capture the live Slides editor canvas, whose layout matches the authoring view."""
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True)
+
+    images: list[Path] = []
+    for slide in slide_map.slides:
+        slide_id = quote(slide.object_id, safe="_-")
+        url = (
+            "https://docs.google.com/presentation/d/"
+            f"{slide_map.presentation_id}/edit?usp=sharing&rm=minimal"
+            f"#slide=id.{slide_id}"
+        )
+        page.goto(url, wait_until="domcontentloaded", timeout=120_000)
+        canvas = page.locator("#canvas")
+        canvas.wait_for(state="visible", timeout=120_000)
+        page.locator(f'[id="editor-{slide.object_id}"]').wait_for(
+            state="attached", timeout=120_000
+        )
+        page.wait_for_timeout(750)
+
+        destination = out_dir / f"slide-{slide.position:03d}.png"
+        canvas.screenshot(path=str(destination), type="png", animations="disabled")
+        images.append(destination)
+    return images
+
+
+def create_raster_pdf(images: list[Path], destination: Path) -> None:
+    """Create an image-only PDF so downstream apps cannot reflow slide text."""
+    if not images:
+        raise ValueError("Cannot create a raster PDF without slide images.")
+    try:
+        from PIL import Image
+        from reportlab.lib.utils import ImageReader
+        from reportlab.pdfgen import canvas
+    except ImportError as error:
+        raise RuntimeError(
+            "Pillow and reportlab are required for Notability-ready PDFs."
+        ) from error
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(images[0]) as first_image:
+        first_width, first_height = first_image.size
+    page_width = 10 * 72
+    source_aspect = first_width / first_height
+    page_aspect = 4 / 3 if abs(source_aspect - (4 / 3)) < 0.01 else source_aspect
+    page_height = page_width / page_aspect
+    pdf = canvas.Canvas(str(destination), pagesize=(page_width, page_height))
+    pdf.setTitle(destination.stem)
+    for image_path in images:
+        with Image.open(image_path) as image:
+            width, height = image.size
+        if abs((width / height) - (first_width / first_height)) > 0.001:
+            raise RuntimeError(f"Slide image has inconsistent aspect ratio: {image_path}")
+        pdf.drawImage(
+            ImageReader(str(image_path)),
+            0,
+            0,
+            width=page_width,
+            height=page_height,
+            preserveAspectRatio=True,
+            anchor="c",
+        )
+        pdf.showPage()
+    pdf.save()
+
+
 def create_stable_aliases(
     deck_dir: Path,
     numbered_images: list[Path],
@@ -307,6 +411,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pdftoppm")
     parser.add_argument("--pdfinfo")
     parser.add_argument("--curl")
+    parser.add_argument("--chromium-executable")
+    parser.add_argument(
+        "--skip-notability-pdfs",
+        action="store_true",
+        help="Skip browser captures and raster-backed PDF generation.",
+    )
     return parser.parse_args()
 
 
@@ -352,6 +462,27 @@ def main() -> int:
             )
         staged_output = temp_root / "Lecture_Images"
         staged_output.mkdir()
+
+        notability_paths: dict[DeckId, str] = {}
+        if not args.skip_notability_pdfs:
+            notability_dir = staged_output / "Notability_PDFs"
+            with google_slides_editor_page(args.chromium_executable) as editor_page:
+                for deck_id, live_map in sorted(live_slide_maps.items()):
+                    print(f"{deck_id.output_name}: capturing editor canvas for Notability")
+                    capture_dir = temp_root / "editor-captures" / deck_id.output_name
+                    captures = capture_google_slides_editor_images(
+                        editor_page,
+                        live_map,
+                        capture_dir,
+                    )
+                    if len(captures) != len(live_map.slides):
+                        raise RuntimeError(
+                            f"{deck_id.output_name}: expected {len(live_map.slides)} "
+                            f"editor captures, created {len(captures)}"
+                        )
+                    pdf_name = f"{deck_id.output_name}_Notability.pdf"
+                    create_raster_pdf(captures, notability_dir / pdf_name)
+                    notability_paths[deck_id] = f"Notability_PDFs/{pdf_name}"
 
         for deck_id in all_decks:
             filled_pdf = filled_decks.get(deck_id)
@@ -430,6 +561,10 @@ def main() -> int:
                 "slide_count": len(numbered_images),
                 "slides": stable_slides,
             }
+            if deck_id in notability_paths:
+                manifest["decks"][deck_id.output_name]["notability_pdf"] = (
+                    notability_paths[deck_id]
+                )
 
         total_images = len(list(staged_output.glob("*/slide-*.png")))
         stable_images = len(list(staged_output.glob("*/by-id/*.png")))

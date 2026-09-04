@@ -17,6 +17,7 @@ function cacheElements() {
     "copy-selected",
     "deck-select",
     "disconnect-github",
+    "download-notability",
     "github-status-control",
     "generation-message",
     "inference-status",
@@ -93,7 +94,25 @@ function currentSlides() {
   return state.manifest.decks[state.deckKey].slides || [];
 }
 
+function updateNotabilityLink() {
+  const deck = state.manifest && state.deckKey
+    ? state.manifest.decks[state.deckKey]
+    : null;
+  const link = elements["download-notability"];
+  if (!deck || !deck.notability_pdf) {
+    link.hidden = true;
+    link.removeAttribute("href");
+    return;
+  }
+  link.href = SlidePickerCore.absoluteImageUrl(
+    SLIDE_PICKER_CONFIG.imageBaseUrl,
+    deck.notability_pdf
+  );
+  link.hidden = false;
+}
+
 function renderSlides() {
+  updateNotabilityLink();
   const slides = currentSlides();
   elements["slide-grid"].replaceChildren();
   if (!slides.length) {
