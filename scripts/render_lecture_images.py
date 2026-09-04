@@ -24,7 +24,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 11
+NOTABILITY_RENDER_VERSION = 12
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -358,10 +358,11 @@ def capture_google_slides_editor_images(
         page.wait_for_timeout(50)
         slide_element.screenshot(path=str(destination), animations="disabled")
         # The editor element sometimes includes objects positioned just beyond
-        # the page boundary. Crop that bounded overflow back to the actual page
+        # the page boundary. Crop that overflow back to the actual page
         # rectangle established by the first slide. Locator screenshots can
         # also differ by a pixel due to fractional CSS bounds, so normalize
-        # those tiny undershoots. Large discrepancies still signal a bad node.
+        # those tiny undershoots. A materially smaller element still signals a
+        # bad node; oversized elements are legitimate off-page authoring data.
         from PIL import Image
 
         with Image.open(destination) as captured:
@@ -371,10 +372,7 @@ def capture_google_slides_editor_images(
             elif current_size != capture_size:
                 width_ratio = current_size[0] / capture_size[0]
                 height_ratio = current_size[1] / capture_size[1]
-                if not (
-                    0.999 <= width_ratio <= 1.10
-                    and 0.999 <= height_ratio <= 1.10
-                ):
+                if width_ratio < 0.999 or height_ratio < 0.999:
                     raise RuntimeError(
                         f"{slide_map.deck_id.output_name} slide {slide.position}: "
                         f"unexpected editor capture size {current_size}; "
