@@ -463,6 +463,7 @@ def main() -> int:
         staged_output = temp_root / "Lecture_Images"
         staged_output.mkdir()
 
+        editor_captures: dict[DeckId, list[Path]] = {}
         notability_paths: dict[DeckId, str] = {}
         if not args.skip_notability_pdfs:
             notability_dir = staged_output / "Notability_PDFs"
@@ -475,6 +476,7 @@ def main() -> int:
                         live_map,
                         capture_dir,
                     )
+                    editor_captures[deck_id] = captures
                     if len(captures) != len(live_map.slides):
                         raise RuntimeError(
                             f"{deck_id.output_name}: expected {len(live_map.slides)} "
@@ -517,6 +519,37 @@ def main() -> int:
                 source_pdf = filled_pdf
                 source_type = "filled_pdf"
                 source_name = filled_pdf.name
+                page_count = pdf_page_count(source_pdf, pdfinfo)
+                if len(slide_map.slides) != page_count:
+                    raise RuntimeError(
+                        f"{deck_id.output_name}: PDF has {page_count} pages but its stable "
+                        f"slide map has {len(slide_map.slides)} entries ({slide_map.source})."
+                    )
+
+                deck_dir = staged_output / deck_id.output_name
+                numbered_images = render_pdf_to_images(
+                    source_pdf,
+                    deck_dir,
+                    pdftoppm,
+                    args.dpi,
+                )
+            elif deck_id in editor_captures:
+                source_type = "google_slides_editor"
+                source_name = (
+                    pointer.name
+                    if pointer
+                    else f"{deck_id.output_name} (Drive discovery)"
+                )
+                page_count = len(slide_map.slides)
+                deck_dir = staged_output / deck_id.output_name
+                deck_dir.mkdir(parents=True)
+                numbered_images = []
+                for source_image, slide in zip(
+                    editor_captures[deck_id], slide_map.slides, strict=True
+                ):
+                    destination = deck_dir / f"slide-{slide.position:03d}.png"
+                    shutil.copy2(source_image, destination)
+                    numbered_images.append(destination)
             else:
                 source_pdf = temp_root / f"{deck_id.output_name}.pdf"
                 source_name = (
@@ -527,21 +560,19 @@ def main() -> int:
                 print(f"{deck_id.output_name}: exporting {source_name}")
                 export_google_slides_pdf(str(presentation_id), source_pdf, curl)
                 source_type = "google_slides"
-
-            page_count = pdf_page_count(source_pdf, pdfinfo)
-            if len(slide_map.slides) != page_count:
-                raise RuntimeError(
-                    f"{deck_id.output_name}: PDF has {page_count} pages but its stable "
-                    f"slide map has {len(slide_map.slides)} entries ({slide_map.source})."
+                page_count = pdf_page_count(source_pdf, pdfinfo)
+                if len(slide_map.slides) != page_count:
+                    raise RuntimeError(
+                        f"{deck_id.output_name}: PDF has {page_count} pages but its stable "
+                        f"slide map has {len(slide_map.slides)} entries ({slide_map.source})."
+                    )
+                deck_dir = staged_output / deck_id.output_name
+                numbered_images = render_pdf_to_images(
+                    source_pdf,
+                    deck_dir,
+                    pdftoppm,
+                    args.dpi,
                 )
-
-            deck_dir = staged_output / deck_id.output_name
-            numbered_images = render_pdf_to_images(
-                source_pdf,
-                deck_dir,
-                pdftoppm,
-                args.dpi,
-            )
             if len(numbered_images) != page_count or not numbered_images:
                 raise RuntimeError(
                     f"{deck_id.output_name}: expected {page_count} images, "
