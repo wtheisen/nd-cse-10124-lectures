@@ -23,7 +23,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 4
+NOTABILITY_RENDER_VERSION = 5
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -375,22 +375,35 @@ def install_export_font_shims(page: object) -> None:
 
 
 def apply_export_font_shims(page: object) -> None:
-    """Force the one unsupported glyph through the metric-compatible face."""
+    """Apply the metric-compatible glyph and undo Slides' stale line wrap."""
     page.evaluate(
         """() => {
-            const walker = document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT
-            );
-            while (walker.nextNode()) {
-                if (!walker.currentNode.nodeValue.includes('\u2375')) continue;
-                const parent = walker.currentNode.parentElement;
-                if (parent) {
-                    parent.style.setProperty(
-                        'font-family',
-                        "'Lecture APL', Arial, sans-serif",
-                        'important'
-                    );
+            const glyphs = Array.from(document.querySelectorAll('#canvas text'));
+            for (let index = 0; index < glyphs.length; index += 1) {
+                const omega = glyphs[index];
+                if (omega.textContent !== '\u2375') continue;
+                omega.style.setProperty(
+                    'font-family',
+                    "'Lecture APL', Arial, sans-serif",
+                    'important'
+                );
+
+                const nabla = glyphs[index - 1];
+                if (!nabla || nabla.textContent !== '\u2207') continue;
+                if (
+                    nabla.closest('.sketchy-text-content') !==
+                    omega.closest('.sketchy-text-content')
+                ) continue;
+
+                // Ubuntu may have already laid these out as separate lines
+                // before the web font is available. Put omega on nabla's
+                // baseline and recompute its horizontal position directly.
+                const nablaX = Number.parseFloat(nabla.getAttribute('x') || '0');
+                const omegaX = nablaX + nabla.getComputedTextLength();
+                omega.setAttribute('x', String(omegaX));
+                omega.removeAttribute('y');
+                if (omega.parentElement !== nabla.parentElement) {
+                    nabla.parentElement.appendChild(omega);
                 }
             }
         }"""
