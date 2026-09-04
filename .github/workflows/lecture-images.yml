@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Starts shortly before the 11:30 lecture and follows Indianapolis DST changes.
-    - cron: "3 11 * * *"
+    - cron: "10 11 * * *"
       timezone: "America/Indiana/Indianapolis"
   push:
     paths:
