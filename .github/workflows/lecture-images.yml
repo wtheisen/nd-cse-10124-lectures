@@ -42,6 +42,24 @@ jobs:
             reportlab==4.4.3
           python3 -m playwright install --with-deps chromium
 
+      - name: Process newly uploaded filled slides
+        env:
+          NOTABILITY_SYNC_TOKEN: ${{ secrets.NOTABILITY_SYNC_TOKEN }}
+          SYNC_URL: ${{ vars.SLIDE_MANIFEST_URL }}
+        run: |
+          test -n "${NOTABILITY_SYNC_TOKEN}"
+          test -n "${SYNC_URL}"
+          response="$(
+            jq -nc \
+              --arg token "${NOTABILITY_SYNC_TOKEN}" \
+              '{token: $token, action: "prepare_filled"}' |
+              curl -fsSL \
+                -H "Content-Type: application/json" \
+                --data-binary @- \
+                "${SYNC_URL}"
+          )"
+          printf '%s' "${response}" | jq -e '.ok == true'
+
       - name: Download filled slides
         run: |
           mkdir -p "${RUNNER_TEMP}/filled-slides"
