@@ -365,14 +365,18 @@ def matching_previous_notability_entry(
     if entry.get("presentation_last_updated") != live_map.presentation_last_updated:
         return None
 
-    previous_slides = entry.get("slides")
-    if not isinstance(previous_slides, list):
-        return None
-    previous_ids = [
-        str(slide.get("id", ""))
-        for slide in previous_slides
-        if isinstance(slide, dict)
-    ]
+    previous_ids = entry.get("notability_source_slide_ids")
+    if not isinstance(previous_ids, list):
+        # Backward-compatible fallback for manifests written before the live
+        # Notability IDs were stored separately from filled-handout IDs.
+        previous_slides = entry.get("slides")
+        if not isinstance(previous_slides, list):
+            return None
+        previous_ids = [
+            str(slide.get("id", ""))
+            for slide in previous_slides
+            if isinstance(slide, dict)
+        ]
     if previous_ids != [slide.object_id for slide in live_map.slides]:
         return None
 
@@ -610,6 +614,9 @@ def main() -> int:
                             curl,
                             pdfinfo,
                         )
+                        notability_exports[deck_id]["notability_source_slide_ids"] = [
+                            slide.object_id for slide in live_map.slides
+                        ]
                         if deck_id not in filled_decks:
                             # Live-only decks also use the browser-faithful export
                             # for their website images. Re-rasterizing at the
@@ -638,6 +645,9 @@ def main() -> int:
                         "notability_md5": file_md5(pdf_path),
                         "notability_size_bytes": pdf_path.stat().st_size,
                         "notability_slide_count": len(captures),
+                        "notability_source_slide_ids": [
+                            slide.object_id for slide in live_map.slides
+                        ],
                     }
 
         for deck_id in all_decks:
