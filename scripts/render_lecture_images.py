@@ -23,7 +23,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 6
+NOTABILITY_RENDER_VERSION = 7
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -425,8 +425,23 @@ def apply_export_font_shims(page: object, slide_object_id: str) -> int:
                 const omegaX = nablaX + nablaElement.getComputedTextLength();
                 omega.setAttribute('x', String(omegaX));
                 omega.removeAttribute('y');
-                if (omega.parentElement !== nablaElement.parentElement) {
-                    nablaElement.parentElement.appendChild(omega);
+                const nablaParent = nablaElement.parentElement;
+                const omegaParent = omega.parentElement;
+                if (omegaParent !== nablaParent) {
+                    const nablaTransform = nablaParent.transform.baseVal
+                        .consolidate()?.matrix;
+                    const omegaTransform = omegaParent.transform.baseVal
+                        .consolidate()?.matrix;
+                    if (nablaTransform && omegaTransform) {
+                        const centeredY = (nablaTransform.f + omegaTransform.f) / 2;
+                        nablaParent.setAttribute(
+                            'transform',
+                            `matrix(${nablaTransform.a} ${nablaTransform.b} ` +
+                            `${nablaTransform.c} ${nablaTransform.d} ` +
+                            `${nablaTransform.e} ${centeredY})`
+                        );
+                    }
+                    nablaParent.appendChild(omega);
                 }
                 repairs += 1;
             }
