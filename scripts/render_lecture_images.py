@@ -2,6 +2,7 @@
 """Render Google Slides and filled PDFs with stable slide-ID image aliases."""
 
 import argparse
+from io import BytesIO
 import json
 import re
 import shutil
@@ -284,7 +285,9 @@ def google_slides_editor_page(chromium_executable: Optional[str] = None) -> Iter
     browser = manager.chromium.launch(**launch_options)
     context = browser.new_context(
         viewport={"width": 2200, "height": 1600},
-        device_scale_factor=2,
+        # About 300 DPI on the 10-inch PDF page: sharp enough for handwriting
+        # and zooming on an iPad without storing oversized 3960px PNGs.
+        device_scale_factor=1.5,
     )
     page = context.new_page()
     try:
@@ -352,10 +355,20 @@ def create_raster_pdf(images: list[Path], destination: Path) -> None:
     for image_path in images:
         with Image.open(image_path) as image:
             width, height = image.size
+            rgb_image = image.convert("RGB")
+            encoded_image = BytesIO()
+            rgb_image.save(
+                encoded_image,
+                format="JPEG",
+                quality=92,
+                subsampling=0,
+                optimize=True,
+            )
+            encoded_image.seek(0)
         if abs((width / height) - (first_width / first_height)) > 0.001:
             raise RuntimeError(f"Slide image has inconsistent aspect ratio: {image_path}")
         pdf.drawImage(
-            ImageReader(str(image_path)),
+            ImageReader(encoded_image),
             0,
             0,
             width=page_width,
