@@ -6,6 +6,7 @@ import hashlib
 from io import BytesIO
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -23,7 +24,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 8
+NOTABILITY_RENDER_VERSION = 9
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -290,10 +291,10 @@ def google_slides_editor_page(chromium_executable: Optional[str] = None) -> Iter
         launch_options["executable_path"] = chromium_executable
     browser = manager.chromium.launch(**launch_options)
     context = browser.new_context(
-        viewport={"width": 2200, "height": 1600},
-        # About 300 DPI on the 10-inch PDF page: sharp enough for handwriting
-        # and zooming on an iPad without storing oversized 3960px PNGs.
-        device_scale_factor=1.5,
+        # This is the viewport used by the verified Mac render. At DPR 1 the
+        # Slides editor produces a roughly 3178x2384 image for a 4:3 slide.
+        viewport={"width": 3400, "height": 2500},
+        device_scale_factor=1,
     )
     page = context.new_page()
     try:
@@ -322,7 +323,9 @@ def capture_google_slides_editor_images(
         f"#slide=id.{first_slide_id}"
     )
     page.goto(first_url, wait_until="domcontentloaded", timeout=120_000)
-    install_export_font_shims(page)
+    use_font_shims = platform.system() != "Darwin"
+    if use_font_shims:
+        install_export_font_shims(page)
     canvas = page.locator("#canvas")
     canvas.wait_for(state="visible", timeout=120_000)
     page.evaluate("() => document.fonts.ready")
@@ -335,13 +338,16 @@ def capture_google_slides_editor_images(
                 "slideId => { window.location.hash = 'slide=id.' + slideId; }",
                 slide_id,
             )
-        page.locator(f'[id="editor-{slide.object_id}"]').wait_for(
+        slide_element = page.locator(f'[id="editor-{slide.object_id}"]')
+        slide_element.wait_for(
             state="visible", timeout=120_000
         )
         # The editor node becomes visible before Slides inserts all of its SVG
         # text, so let the slide paint before repairing font-dependent layout.
         page.wait_for_timeout(1_000)
-        repaired_gradients = apply_export_font_shims(page, slide.object_id)
+        repaired_gradients = (
+            apply_export_font_shims(page, slide.object_id) if use_font_shims else 0
+        )
         if repaired_gradients:
             print(
                 f"{slide_map.deck_id.output_name} slide {slide.position}: "
@@ -349,7 +355,7 @@ def capture_google_slides_editor_images(
             )
         destination = out_dir / f"slide-{slide.position:03d}.png"
         page.wait_for_timeout(50)
-        canvas.screenshot(path=str(destination), animations="disabled")
+        slide_element.screenshot(path=str(destination), animations="disabled")
         images.append(destination)
     return images
 

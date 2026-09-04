@@ -1,7 +1,7 @@
 # Lecture image pipeline
 
-The GitHub Pages workflow renders slide decks to PNG files that can be embedded
-directly in Colab notebooks.
+The GitHub Pages workflow runs on the course Mac and renders slide decks to PNG
+files that can be embedded directly in Colab notebooks.
 
 ## Naming
 
@@ -24,13 +24,17 @@ not store Google credentials in GitHub.
 
 ## Automation
 
-`.github/workflows/lecture-images.yml` runs daily at 11:25 AM Indianapolis time.
-It can also be started manually from GitHub Actions. It:
+`.github/workflows/lecture-images.yml` runs daily at 11:10 AM Indianapolis time.
+It can also be started manually from GitHub Actions or the Chrome extension. It
+does not run on repository pushes. It:
 
 1. Downloads the current contents of the filled-slides folder.
 2. Discovers source decks from the configured Google Drive Slides folder.
-3. Exports any deck without a filled PDF directly from Google Slides as PDF.
-4. Renders every PDF page to a numbered PNG.
+3. Captures any deck without a filled PDF from the Google Slides editor in
+   Chrome on the course Mac, using the same locally installed fonts as the
+   authoring view.
+4. Builds the Notability PDF from those captured pixels and publishes the same
+   captures as numbered PNGs.
 5. Pairs pages with native slide IDs and creates stable `by-id/` aliases.
 6. Verifies page counts and deploys the result to GitHub Pages.
 
@@ -60,4 +64,8 @@ python3 scripts/render_lecture_images.py \
 ```
 
 The renderer builds into a temporary directory and only replaces
-`Lecture_Images/` after every deck succeeds.
+`Lecture_Images/` after every deck succeeds. The Mac must be awake and its
+self-hosted GitHub Actions runner service must be online at the scheduled time.
+The runner is repository-scoped, requires the `cse10124-slides` label, runs with
+an explicit macOS sandbox profile, and checks out without persisting GitHub
+credentials.

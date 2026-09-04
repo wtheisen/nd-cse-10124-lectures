@@ -6,12 +6,8 @@ on:
     # Starts shortly before the 11:30 lecture and follows Indianapolis DST changes.
     - cron: "10 11 * * *"
       timezone: "America/Indiana/Indianapolis"
-  push:
-    paths:
-      - "Slides/**/*.gslides"
-      - "scripts/render_lecture_images.py"
-      - "scripts/html_img_generator.py"
-      - ".github/workflows/lecture-images.yml"
+
+permissions: {}
 
 concurrency:
   group: lecture-images-pages
@@ -19,7 +15,10 @@ concurrency:
 
 jobs:
   render:
-    runs-on: ubuntu-latest
+    # This repository's self-hosted runner is the instructor's Mac. Rendering
+    # there gives Google Slides the same installed fonts and metrics as the
+    # authoring view, including Arial Unicode MS fallback glyphs.
+    runs-on: [self-hosted, macOS, cse10124-slides]
     permissions:
       contents: read
       pages: write
@@ -29,18 +28,27 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Install render dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y poppler-utils
-          python3 -m pip install --disable-pip-version-check \
+          command -v brew >/dev/null
+          brew list poppler >/dev/null 2>&1 || brew install poppler
+          python3 -m venv "${RUNNER_TEMP}/lecture-images-venv"
+          echo "${RUNNER_TEMP}/lecture-images-venv/bin" >> "${GITHUB_PATH}"
+          "${RUNNER_TEMP}/lecture-images-venv/bin/python3" -m pip install \
+            --disable-pip-version-check \
             gdown==6.1.0 \
             pillow==11.3.0 \
             playwright==1.55.0 \
             reportlab==4.4.3
-          python3 -m playwright install --with-deps chromium
+
+      - name: Verify native Mac renderer
+        run: |
+          test -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          test -f "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
 
       - name: Process newly uploaded filled slides
         env:
@@ -75,6 +83,8 @@ jobs:
           python3 scripts/render_lecture_images.py \
             --filled-dir "${RUNNER_TEMP}/filled-slides" \
             --slide-manifest-url "${SLIDE_MANIFEST_URL}" \
+            --chromium-executable \
+              "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
             --previous-output-manifest-url \
               "https://williamtheisen.com/nd-cse-10124-lectures/Lecture_Images/manifest.json"
 
@@ -87,7 +97,7 @@ jobs:
             -eq "$(find Lecture_Images -name 'slide-*.png' -type f | wc -l)"
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Prepare Pages artifact
         run: |
@@ -96,13 +106,13 @@ jobs:
           touch site/.nojekyll
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
 
       - name: Sync Notability PDFs to Google Drive
         env:
