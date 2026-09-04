@@ -36,6 +36,7 @@ jobs:
         run: |
           command -v brew >/dev/null
           brew list poppler >/dev/null 2>&1 || brew install poppler
+          brew list gnu-tar >/dev/null 2>&1 || brew install gnu-tar
           python3 -m venv "${RUNNER_TEMP}/lecture-images-venv"
           echo "${RUNNER_TEMP}/lecture-images-venv/bin" >> "${GITHUB_PATH}"
           "${RUNNER_TEMP}/lecture-images-venv/bin/python3" -m pip install \
@@ -49,6 +50,7 @@ jobs:
         run: |
           test -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
           test -f "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+          command -v gtar >/dev/null
 
       - name: Process newly uploaded filled slides
         env:
