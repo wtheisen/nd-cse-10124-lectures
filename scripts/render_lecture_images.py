@@ -5,6 +5,7 @@ import argparse
 import hashlib
 from io import BytesIO
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -468,6 +469,7 @@ def main() -> int:
     manifest: dict[str, object] = {
         "version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_revision": os.environ.get("GITHUB_SHA", ""),
         "decks": {},
     }
     with tempfile.TemporaryDirectory(prefix="lecture-images-") as temp_dir:

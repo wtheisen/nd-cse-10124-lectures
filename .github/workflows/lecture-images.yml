@@ -3,8 +3,8 @@ name: Render lecture images
 on:
   workflow_dispatch:
   schedule:
-    # Runs every morning and follows Indianapolis DST changes.
-    - cron: "25 11 * * *"
+    # Starts shortly before the 11:30 lecture and follows Indianapolis DST changes.
+    - cron: "3 11 * * *"
       timezone: "America/Indiana/Indianapolis"
   push:
     paths:
@@ -83,3 +83,33 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Sync Notability PDFs to Google Drive
+        env:
+          NOTABILITY_SYNC_TOKEN: ${{ secrets.NOTABILITY_SYNC_TOKEN }}
+          SYNC_URL: ${{ vars.SLIDE_MANIFEST_URL }}
+        run: |
+          test -n "${NOTABILITY_SYNC_TOKEN}"
+          test -n "${SYNC_URL}"
+
+          for attempt in 1 2 3 4 5 6; do
+            response="$(
+              jq -nc \
+                --arg token "${NOTABILITY_SYNC_TOKEN}" \
+                --arg revision "${GITHUB_SHA}" \
+                '{token: $token, revision: $revision}' |
+                curl -fsSL \
+                  -H "Content-Type: application/json" \
+                  --data-binary @- \
+                  "${SYNC_URL}"
+            )" || response=""
+
+            if printf '%s' "${response}" | jq -e '.ok == true' >/dev/null 2>&1; then
+              exit 0
+            fi
+
+            sleep 20
+          done
+
+          echo "Apps Script did not confirm the Google Drive sync."
+          exit 1
