@@ -24,7 +24,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 9
+NOTABILITY_RENDER_VERSION = 10
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -331,6 +331,7 @@ def capture_google_slides_editor_images(
     page.evaluate("() => document.fonts.ready")
 
     images: list[Path] = []
+    capture_size: Optional[tuple[int, int]] = None
     for index, slide in enumerate(slide_map.slides):
         slide_id = quote(slide.object_id, safe="_-")
         if index:
@@ -356,6 +357,28 @@ def capture_google_slides_editor_images(
         destination = out_dir / f"slide-{slide.position:03d}.png"
         page.wait_for_timeout(50)
         slide_element.screenshot(path=str(destination), animations="disabled")
+        # Locator screenshots round fractional CSS bounds to device pixels. A
+        # slide whose transformed edge lands on a different fraction can thus
+        # be one pixel wider or taller even though every slide in the deck has
+        # the same page size. Normalize only these tiny rounding differences;
+        # a larger discrepancy still signals that we captured the wrong node.
+        from PIL import Image
+
+        with Image.open(destination) as captured:
+            current_size = captured.size
+            if capture_size is None:
+                capture_size = current_size
+            elif current_size != capture_size:
+                width_delta = abs(current_size[0] - capture_size[0])
+                height_delta = abs(current_size[1] - capture_size[1])
+                if width_delta > 2 or height_delta > 2:
+                    raise RuntimeError(
+                        f"{slide_map.deck_id.output_name} slide {slide.position}: "
+                        f"unexpected editor capture size {current_size}; "
+                        f"expected {capture_size}"
+                    )
+                normalized = captured.resize(capture_size, Image.Resampling.LANCZOS)
+                normalized.save(destination, format="PNG", optimize=True)
         images.append(destination)
     return images
 
