@@ -23,7 +23,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 3
+NOTABILITY_RENDER_VERSION = 4
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -338,6 +338,7 @@ def capture_google_slides_editor_images(
         page.locator(f'[id="editor-{slide.object_id}"]').wait_for(
             state="visible", timeout=120_000
         )
+        apply_export_font_shims(page)
         destination = out_dir / f"slide-{slide.position:03d}.png"
         # Slides finishes swapping slides before the editor node becomes visible,
         # but give its formula images one short paint cycle before capture.
@@ -362,14 +363,38 @@ def install_export_font_shims(page: object) -> None:
     page.add_style_tag(
         content=(
             "@font-face {"
-            "font-family: Arial;"
+            "font-family: 'Lecture APL';"
             f"src: url(data:font/ttf;base64,{encoded_font}) format('truetype');"
             "font-style: normal; font-weight: 400; font-display: block;"
             "unicode-range: U+2375;"
             "}"
         )
     )
-    page.evaluate("() => document.fonts.load('67px Arial', '\u2375')")
+    page.evaluate("() => document.fonts.load('67px \\\"Lecture APL\\\"', '\u2375')")
+    page.evaluate("() => document.fonts.ready")
+
+
+def apply_export_font_shims(page: object) -> None:
+    """Force the one unsupported glyph through the metric-compatible face."""
+    page.evaluate(
+        """() => {
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT
+            );
+            while (walker.nextNode()) {
+                if (!walker.currentNode.nodeValue.includes('\u2375')) continue;
+                const parent = walker.currentNode.parentElement;
+                if (parent) {
+                    parent.style.setProperty(
+                        'font-family',
+                        "'Lecture APL', Arial, sans-serif",
+                        'important'
+                    );
+                }
+            }
+        }"""
+    )
     page.evaluate("() => document.fonts.ready")
 
 
