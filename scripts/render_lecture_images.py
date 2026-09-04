@@ -24,7 +24,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 10
+NOTABILITY_RENDER_VERSION = 11
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -357,11 +357,11 @@ def capture_google_slides_editor_images(
         destination = out_dir / f"slide-{slide.position:03d}.png"
         page.wait_for_timeout(50)
         slide_element.screenshot(path=str(destination), animations="disabled")
-        # Locator screenshots round fractional CSS bounds to device pixels. A
-        # slide whose transformed edge lands on a different fraction can thus
-        # be one pixel wider or taller even though every slide in the deck has
-        # the same page size. Normalize only these tiny rounding differences;
-        # a larger discrepancy still signals that we captured the wrong node.
+        # The editor element sometimes includes objects positioned just beyond
+        # the page boundary. Crop that bounded overflow back to the actual page
+        # rectangle established by the first slide. Locator screenshots can
+        # also differ by a pixel due to fractional CSS bounds, so normalize
+        # those tiny undershoots. Large discrepancies still signal a bad node.
         from PIL import Image
 
         with Image.open(destination) as captured:
@@ -369,15 +369,24 @@ def capture_google_slides_editor_images(
             if capture_size is None:
                 capture_size = current_size
             elif current_size != capture_size:
-                width_delta = abs(current_size[0] - capture_size[0])
-                height_delta = abs(current_size[1] - capture_size[1])
-                if width_delta > 2 or height_delta > 2:
+                width_ratio = current_size[0] / capture_size[0]
+                height_ratio = current_size[1] / capture_size[1]
+                if not (
+                    0.999 <= width_ratio <= 1.10
+                    and 0.999 <= height_ratio <= 1.10
+                ):
                     raise RuntimeError(
                         f"{slide_map.deck_id.output_name} slide {slide.position}: "
                         f"unexpected editor capture size {current_size}; "
                         f"expected {capture_size}"
                     )
-                normalized = captured.resize(capture_size, Image.Resampling.LANCZOS)
+                crop_width = min(current_size[0], capture_size[0])
+                crop_height = min(current_size[1], capture_size[1])
+                normalized = captured.crop((0, 0, crop_width, crop_height))
+                if normalized.size != capture_size:
+                    normalized = normalized.resize(
+                        capture_size, Image.Resampling.LANCZOS
+                    )
                 normalized.save(destination, format="PNG", optimize=True)
         images.append(destination)
     return images
