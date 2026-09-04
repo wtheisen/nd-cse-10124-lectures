@@ -23,7 +23,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 7
+NOTABILITY_RENDER_VERSION = 8
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -421,6 +421,10 @@ def apply_export_font_shims(page: object, slide_object_id: str) -> int:
                 // before the web font is available. Put omega on nabla's
                 // baseline and recompute its horizontal position directly.
                 const nablaElement = nabla.element;
+                const nablaRect = nablaElement.getBoundingClientRect();
+                const originalCenterY = (
+                    nablaRect.y + nablaRect.height / 2 + omegaCenter.y
+                ) / 2;
                 const nablaX = Number.parseFloat(nablaElement.getAttribute('x') || '0');
                 const omegaX = nablaX + nablaElement.getComputedTextLength();
                 omega.setAttribute('x', String(omegaX));
@@ -430,18 +434,37 @@ def apply_export_font_shims(page: object, slide_object_id: str) -> int:
                 if (omegaParent !== nablaParent) {
                     const nablaTransform = nablaParent.transform.baseVal
                         .consolidate()?.matrix;
-                    const omegaTransform = omegaParent.transform.baseVal
-                        .consolidate()?.matrix;
-                    if (nablaTransform && omegaTransform) {
-                        const centeredY = (nablaTransform.f + omegaTransform.f) / 2;
+                    const outerTransform = nablaParent.parentElement?.getScreenCTM();
+                    if (nablaTransform && outerTransform) {
+                        // The line separation is not necessarily encoded in the
+                        // two line-group matrices. Center the repaired pair at
+                        // the midpoint of the glyphs' actual pre-repair screen
+                        // positions, which is the center Slides intended for
+                        // the original one-line text box.
+                        nablaParent.appendChild(omega);
+                        const repairedNablaRect = nablaElement.getBoundingClientRect();
+                        const repairedOmegaRect = omega.getBoundingClientRect();
+                        const repairedTop = Math.min(
+                            repairedNablaRect.top,
+                            repairedOmegaRect.top
+                        );
+                        const repairedBottom = Math.max(
+                            repairedNablaRect.bottom,
+                            repairedOmegaRect.bottom
+                        );
+                        const screenDeltaY = originalCenterY - (
+                            repairedTop + repairedBottom
+                        ) / 2;
+                        const parentDeltaY = screenDeltaY / outerTransform.d;
                         nablaParent.setAttribute(
                             'transform',
                             `matrix(${nablaTransform.a} ${nablaTransform.b} ` +
                             `${nablaTransform.c} ${nablaTransform.d} ` +
-                            `${nablaTransform.e} ${centeredY})`
+                            `${nablaTransform.e} ${nablaTransform.f + parentDeltaY})`
                         );
+                    } else {
+                        nablaParent.appendChild(omega);
                     }
-                    nablaParent.appendChild(omega);
                 }
                 repairs += 1;
             }
