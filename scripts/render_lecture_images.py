@@ -24,7 +24,7 @@ DECK_RE = re.compile(
     re.IGNORECASE,
 )
 SLIDE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
-NOTABILITY_RENDER_VERSION = 12
+NOTABILITY_RENDER_VERSION = 13
 APL_FONT_PATH = Path(__file__).resolve().parent / "assets" / "LectureAPL-Regular.ttf.b64"
 
 
@@ -356,13 +356,14 @@ def capture_google_slides_editor_images(
             )
         destination = out_dir / f"slide-{slide.position:03d}.png"
         page.wait_for_timeout(50)
-        slide_element.screenshot(path=str(destination), animations="disabled")
-        # The editor element sometimes includes objects positioned just beyond
-        # the page boundary. Crop that overflow back to the actual page
-        # rectangle established by the first slide. Locator screenshots can
-        # also differ by a pixel due to fractional CSS bounds, so normalize
-        # those tiny undershoots. A materially smaller element still signals a
-        # bad node; oversized elements are legitimate off-page authoring data.
+        # SVG group bounds include the uncropped extent of clipped images.
+        # The first direct path is Slides' page background, so screenshot its
+        # rectangle to capture the final composited slide without that overflow.
+        slide_element.locator(":scope > path").first.screenshot(
+            path=str(destination), animations="disabled"
+        )
+        # Locator screenshots can differ by a pixel due to fractional CSS
+        # bounds; normalize those tiny differences to a consistent page size.
         from PIL import Image
 
         with Image.open(destination) as captured:
