@@ -63,7 +63,7 @@ jobs:
             jq -nc \
               --arg token "${NOTABILITY_SYNC_TOKEN}" \
               '{token: $token, action: "prepare_filled"}' |
-              curl -fsSL \
+              curl -fsSL --connect-timeout 30 --max-time 180 --retry 2 --retry-all-errors \
                 -H "Content-Type: application/json" \
                 --data-binary @- \
                 "${SYNC_URL}"
@@ -131,7 +131,7 @@ jobs:
                 --arg token "${NOTABILITY_SYNC_TOKEN}" \
                 --arg revision "${GITHUB_SHA}" \
                 '{token: $token, revision: $revision}' |
-                curl -fsSL \
+                curl -fsSL --connect-timeout 30 --max-time 180 --retry 2 --retry-all-errors \
                   -H "Content-Type: application/json" \
                   --data-binary @- \
                   "${SYNC_URL}"
