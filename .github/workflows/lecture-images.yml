@@ -68,6 +68,7 @@ jobs:
                 --data-binary @- \
                 "${SYNC_URL}"
           )"
+          printf '%s' "${response}" | jq '{ok, error, failures: .result.failures}'
           printf '%s' "${response}" | jq -e '.ok == true'
 
       - name: Download filled slides
