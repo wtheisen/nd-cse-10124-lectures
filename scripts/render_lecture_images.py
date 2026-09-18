@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -96,24 +97,58 @@ def index_decks(paths: list[Path], label: str) -> dict[DeckId, Path]:
 
 
 def download_file(url: str, destination: Path, curl: str, label: str) -> None:
-    try:
-        subprocess.run(
+    # Retry temporary Google export failures, including intermittent Apps Script 404s.
+    # Each request is capped at 120 seconds, with only 5 + 10 seconds of backoff.
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        started = time.monotonic()
+        result = subprocess.run(
             [
                 curl,
                 "--fail",
                 "--location",
                 "--silent",
                 "--show-error",
+                "--connect-timeout",
+                "30",
                 "--max-time",
                 "120",
+                "--write-out",
+                "%{http_code}",
                 "--output",
                 str(destination),
                 url,
             ],
-            check=True,
+            capture_output=True,
+            text=True,
         )
-    except subprocess.CalledProcessError as error:
-        raise RuntimeError(f"Could not download {label}: {url}") from error
+        status = result.stdout.strip() or "000"
+        elapsed = time.monotonic() - started
+        # Do not log URLs, redirect query strings, or response bodies: they may
+        # contain temporary credentials or private document content.
+        print(
+            f"Download {label}: attempt {attempt}/{attempts}, "
+            f"HTTP {status}, curl exit {result.returncode}, {elapsed:.1f}s",
+            flush=True,
+        )
+        if result.returncode == 0:
+            return
+
+        destination.unlink(missing_ok=True)
+        retryable = (
+            (not status.startswith("4")
+             and result.returncode in {5, 6, 7, 18, 28, 35, 52, 55, 56, 92})
+            or status in {"404", "408", "429"}
+            or status.startswith("5")
+        )
+        if not retryable or attempt == attempts:
+            raise RuntimeError(
+                f"Could not download {label} after {attempt} attempt(s): "
+                f"HTTP {status}, curl exit {result.returncode}"
+            )
+        delay = 5 * attempt
+        print(f"Retrying {label} in {delay}s", flush=True)
+        time.sleep(delay)
 
 
 def export_google_slides_pdf(
