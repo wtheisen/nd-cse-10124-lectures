@@ -2,6 +2,11 @@ name: Render lecture images
 
 on:
   workflow_dispatch:
+    inputs:
+      new_deck:
+        description: "Add only a new deck (e.g. ProgrammingDay05), preserving published decks"
+        required: false
+        type: string
   schedule:
     # Starts shortly before the 11:30 lecture and follows Indianapolis DST changes.
     - cron: "10 11 * * *"
@@ -53,6 +58,7 @@ jobs:
           command -v gtar >/dev/null
 
       - name: Process newly uploaded filled slides
+        if: ${{ !inputs.new_deck }}
         env:
           NOTABILITY_SYNC_TOKEN: ${{ secrets.NOTABILITY_SYNC_TOKEN }}
           SYNC_URL: ${{ vars.SLIDE_MANIFEST_URL }}
@@ -72,6 +78,7 @@ jobs:
           printf '%s' "${response}" | jq -e '.ok == true'
 
       - name: Download filled slides
+        if: ${{ !inputs.new_deck }}
         run: |
           mkdir -p "${RUNNER_TEMP}/filled-slides"
           python3 -m gdown --folder \
@@ -79,6 +86,7 @@ jobs:
             --output "${RUNNER_TEMP}/filled-slides"
 
       - name: Render lecture images
+        if: ${{ !inputs.new_deck }}
         env:
           SLIDE_MANIFEST_URL: ${{ vars.SLIDE_MANIFEST_URL }}
         run: |
@@ -90,6 +98,13 @@ jobs:
               "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
             --previous-output-manifest-url \
               "https://williamtheisen.com/nd-cse-10124-lectures/Lecture_Images/manifest.json"
+
+      - name: Add a new deck to the published catalog
+        if: ${{ inputs.new_deck }}
+        env:
+          NEW_DECK: ${{ inputs.new_deck }}
+          SLIDE_MANIFEST_URL: ${{ vars.SLIDE_MANIFEST_URL }}
+        run: python3 scripts/publish_new_deck.py
 
       - name: Validate rendered site
         run: |
@@ -118,6 +133,7 @@ jobs:
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
 
       - name: Sync Notability PDFs to Google Drive
+        if: ${{ !inputs.new_deck }}
         env:
           NOTABILITY_SYNC_TOKEN: ${{ secrets.NOTABILITY_SYNC_TOKEN }}
           SYNC_URL: ${{ vars.SLIDE_MANIFEST_URL }}
