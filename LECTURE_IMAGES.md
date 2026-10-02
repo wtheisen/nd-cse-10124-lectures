@@ -69,3 +69,16 @@ self-hosted GitHub Actions runner service must be online at the scheduled time.
 The runner is repository-scoped, requires the `cse10124-slides` label, runs with
 an explicit macOS sandbox profile, and checks out without persisting GitHub
 credentials.
+
+## Recovering one published deck
+
+Set `new_deck` to a catalog key such as `ProgrammingDay06` and enable
+`replace_existing` to regenerate that deck while preserving the other published
+images and PDFs. Replacement is rejected unless explicitly enabled.
+
+The Mac runner must be able to read all four installed Consolas font files in
+`/Users/wtheisen/Library/Fonts`. Its sandbox permits only those specific files,
+not the rest of the user directory. Chrome can select an installed font even
+when the sandbox prevents reading its data, producing missing-glyph boxes. The
+workflow checks readability before rendering. Restart the runner after changing
+its sandbox profile.

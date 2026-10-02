@@ -1,4 +1,4 @@
-"""Render one new Google Slides deck and preserve the published catalog."""
+"""Render one Google Slides deck and preserve the other published decks."""
 import concurrent.futures
 import hashlib
 import json
@@ -37,8 +37,8 @@ def main():
         previous = json.loads(previous_path.read_text())
         if previous.get('version') != 2 or not previous.get('decks'):
             raise ValueError('Published catalog is missing or invalid')
-        if deck in previous['decks']:
-            raise ValueError('Deck already published; use the regular regeneration workflow')
+        if deck in previous['decks'] and os.environ.get('REPLACE_EXISTING') != 'true':
+            raise ValueError('Deck already published; explicitly enable replacement to regenerate it')
         live_path = root / 'live.json'
         download_file(os.environ['SLIDE_MANIFEST_URL'], live_path, curl, 'live catalog')
         live = json.loads(live_path.read_text())
@@ -58,7 +58,9 @@ def main():
         ], check=True)
         new = json.loads((output / 'manifest.json').read_text())
         jobs = []
-        for entry in previous['decks'].values():
+        for name, entry in previous['decks'].items():
+            if name == deck:
+                continue
             for slide in entry['slides']:
                 jobs.append((slide['image'], None, None))
                 jobs.append((slide['numbered_image'], None, None))
@@ -88,7 +90,7 @@ def main():
         if destination.exists():
             shutil.rmtree(destination)
         shutil.move(str(output), destination)
-        print(f'Added {deck} with {len(selected["slides"])} slides; preserved {len(previous["decks"])} decks.')
+        print(f'Published {deck} with {len(selected["slides"])} slides; preserved {len(previous["decks"])-int(deck in previous["decks"])} other decks.')
 
 
 if __name__ == '__main__':
