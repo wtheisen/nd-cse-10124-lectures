@@ -3,8 +3,13 @@ name: Render lecture images
 on:
   workflow_dispatch:
     inputs:
+      replace_existing:
+        description: "Replace the selected deck if already published; preserve all other decks"
+        required: false
+        type: boolean
+        default: false
       new_deck:
-        description: "Add only a new deck (e.g. ProgrammingDay05), preserving published decks"
+        description: "Publish one deck (e.g. ProgrammingDay06), preserving all other decks"
         required: false
         type: string
   schedule:
@@ -56,6 +61,11 @@ jobs:
           test -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
           test -f "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
           command -v gtar >/dev/null
+          # These fonts were installed per-user. The runner sandbox must allow
+          # reading them; otherwise Chrome paints missing-glyph boxes.
+          for font in Consola Consolab Consolai Consolaz; do
+            head -c 1 "/Users/wtheisen/Library/Fonts/${font}.ttf" >/dev/null
+          done
 
       - name: Process newly uploaded filled slides
         if: ${{ !inputs.new_deck }}
@@ -103,6 +113,7 @@ jobs:
         if: ${{ inputs.new_deck }}
         env:
           NEW_DECK: ${{ inputs.new_deck }}
+          REPLACE_EXISTING: ${{ inputs.replace_existing }}
           SLIDE_MANIFEST_URL: ${{ vars.SLIDE_MANIFEST_URL }}
         run: python3 scripts/publish_new_deck.py
 
